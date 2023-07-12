@@ -1,0 +1,4 @@
+Chip Name: Nor
+Input:     a
+Output:    out
+Function:  if (a==0) then out = 1 else 0
