@@ -15,4 +15,10 @@ CHIP Or {
 
     PARTS:
     // Put your code here:
+    Not(in = a, out = nota);
+    Not(in = b, out = notb);
+    And(a = nota, b = notb, out = anorb);
+    Not(in = anorb, out = out);
+    // Implementation strategy: De Morgan's law
+    // (a + b)` = a` . b`
 }
