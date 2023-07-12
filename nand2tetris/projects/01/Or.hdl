@@ -20,5 +20,5 @@ CHIP Or {
     And(a = nota, b = notb, out = anorb);
     Not(in = anorb, out = out);
     // Implementation strategy: De Morgan's law
-    // (a + b)` = a` . b`
+    // (a + b)' = a' . b'
 }
