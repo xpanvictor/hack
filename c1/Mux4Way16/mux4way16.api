@@ -1,0 +1,6 @@
+Chip Name: Mux4Way16
+Input:     a[16], b[16], c[16], d[16], sel[2]
+Output:    out[16]
+Function:  if (sel == 00,01,110,11) then out = a,b,c, or d
+Comment:   Assignment is a 16 bit operation 
+           where "out = a" means "for i=0..16 out[i] = a[i]"
