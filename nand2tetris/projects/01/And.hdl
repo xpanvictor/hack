@@ -15,4 +15,8 @@ CHIP And {
 
     PARTS:
     // Put your code here:
+    Nand (a = a, b = b, out = nandout);
+    Not (in = nandout, out = out);
+    // Implementation strategy: 
+    // And = Not(Nand)
 }
