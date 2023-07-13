@@ -1,0 +1,4 @@
+Chip Name: Mux
+Input:     in, sel
+Output:    a, b
+Function: a = in if sel == 0 else b = in

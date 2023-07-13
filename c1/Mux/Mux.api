@@ -1,6 +1,7 @@
 Chip Name: Mux
 Input:     a, b, sel
 Output:    out
+Function: out = a if sel == 0 else b
 Truth table:
     a-b-sel-out
     0-0-0 - 0
