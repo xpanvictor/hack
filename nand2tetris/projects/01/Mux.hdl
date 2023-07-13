@@ -15,4 +15,13 @@ CHIP Mux {
 
     PARTS:
     // Put your code here:
+    And (a = sel, b = b, out = selAndb);
+    Not (in = sel, out = notsel);
+    And (a = a, b = notsel, out = aAndnotsel);
+    Or (a = selAndb, b = aAndnotsel, out = out);
+    // Implementation logic:
+    // Will use the not gate as an inverter, so
+    // pass b with sel using and gate 
+    // or to retrieve either truthy
+    // (b . sel) + (a . sel')
 }

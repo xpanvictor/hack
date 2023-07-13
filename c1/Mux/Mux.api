@@ -1,0 +1,13 @@
+Chip Name: Mux
+Input:     a, b, sel
+Output:    out
+Truth table:
+    a-b-sel-out
+    0-0-0 - 0
+    0-0-1 - 0
+    0-1-0 - 0
+    0-1-1 - 1
+    1-0-0 - 1
+    1-0-1 - 0
+    1-1-0 - 1
+    1-1-1 - 1
