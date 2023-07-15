@@ -1,0 +1,5 @@
+Chip Name: FullAdder
+Input: a, b, c
+Output: sum, carry
+Function: sum = LSB of a + b + c
+          carry = MSB of a + b + c

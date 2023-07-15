@@ -1,0 +1,5 @@
+Chip Name: HalfAdder
+Input: a, b
+Output: sum, carry
+Function: sum = LSB of a + b
+          carry = MSB of a + b
