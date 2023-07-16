@@ -1,0 +1,4 @@
+Chip Name: Adder
+Input: a[16], b[16]
+Output: out[16]
+Function: a + b; overflow is ignored
