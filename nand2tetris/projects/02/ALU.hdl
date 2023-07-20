@@ -43,4 +43,25 @@ CHIP ALU {
 
     PARTS:
    // Put you code here:
+   // Use a multiplexer to either go with zero all through or x
+   Mux16(a = x, b[0..15] = false, sel = zx, out = xAfterzx);
+   Not16(in = xAfterzx, out = notx);
+   Mux16(a = xAfterzx, b = notx, sel = nx, out = xAfternx);
+   // same for y
+   Mux16(a = y, b[0..15] = false, sel = zy, out = yAfterzy);
+   Not16(in = yAfterzy, out = noty);
+   Mux16(a = yAfterzy, b = noty, sel = ny, out = yAfterny);
+   // add if f else and
+   Add16(a = xAfternx, b = yAfterny, out = xAddy);
+   And16(a = xAfternx, b = yAfterny, out = aAndy);
+   Mux16(a = aAndy, b = xAddy, sel = f, out = outAfterf);
+   // bitwise negate out if no
+   Not16(in = outAfterf, out = notout);
+   Mux16(a = outAfterf, b = notout, sel = no, out = out, out[15] = ng, out[0..7] = outlow, out[8..15] = outhigh);
+   // check if all out is zero, then zr = 1
+   Or8Way(in = outlow, out = pt1);
+   Or8Way(in = outhigh, out = pt2);
+   Or(a = pt1, b = pt2, out = nzr);
+   Not(in = nzr, out = zr);
+   // Xor(a = false, b = out[15], out = ng); // using xor as a buffer
 }

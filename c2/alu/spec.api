@@ -19,5 +19,3 @@ Function:
       if out == 0 zr = 1 else 0 // 16 bit equality comparison
       if out < 0 ng = 1 else 0  // two's complement comparison
 Comment: Overflow bit is ignored
-
-
