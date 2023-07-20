@@ -1,0 +1,23 @@
+Chip Name: ALU
+Input: x[16], y[16] // 2 16bits input
+       zx, // zero the x input
+       nx, // not x input
+       zy, // zero the y input
+       ny, // not y input
+       f,  // if f == 1 out = add(x,y) else and(x,y)
+       no, // negate the output
+Output: out[16] // 16bit output
+        zr,     // if out == 0 zr = 1 else 0
+        ng,     // if out < 0 ng = 1 else 0
+Function: 
+      if zx, x = 0   // 16 bits zero constant
+      if nx, x = !x  // bitwise negation
+      if zy ... // same for y
+      if f out = x + y // 16 bits addition
+      else out = x & y // bitwise and operation
+      if no out = !out // bitwise negation 
+      if out == 0 zr = 1 else 0 // 16 bit equality comparison
+      if out < 0 ng = 1 else 0  // two's complement comparison
+Comment: Overflow bit is ignored
+
+
