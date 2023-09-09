@@ -1,0 +1,6 @@
+Chip Name: Bit (1-bit register)
+Input: in, load
+Output: out
+Function: if load(t) then out(t+1) = in(t)
+                     else out(t+1) = out(t)
+
