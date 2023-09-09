@@ -29,6 +29,6 @@ CHIP RAM64 {
     // Read
     Mux8Way16(a=ra, b=rb, c=rc, d=rd, e=re, f=rf, g=rg, h=rh, sel=address[0..2], out=out);
     // Write operation
-    DMux8Way(in=load, sel=address[3..5], a=la, b=lb, c=lc, d=ld, e=le, f=lf, g=lg, h=lh);
+    DMux8Way(in=load, sel=address[0..2], a=la, b=lb, c=lc, d=ld, e=le, f=lf, g=lg, h=lh);
 
 }
