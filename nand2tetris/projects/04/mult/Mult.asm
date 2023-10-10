@@ -10,3 +10,41 @@
 // R0 >= 0, R1 >= 0, and R0*R1 < 32768.
 
 // Put your code here.
+
+// -------> Psuedocode
+// Program: Mult.asm
+// Sets R2 = R0 * R1
+// R2 = 0
+// i = 0
+// if i == R1 goto END
+// R2 = R2 + R0
+// i += 1
+// END
+
+// --------> asm
+    // Set R2 = R0 initially
+    @R2
+    M=0
+    @i
+    M=0
+(LOOP)
+    // if i == R1 goto END
+    @R1
+    D=M
+    @i
+    D=D-M
+    @END
+    D;JEQ
+    // R2 = R2 + R0
+    @R0
+    D=M
+    @R2
+    M=D+M
+    // increment i
+    @i
+    M=M+1
+    @LOOP
+    0;JEQ
+(END)
+    @END
+    0;JMP
