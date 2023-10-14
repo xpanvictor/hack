@@ -40,4 +40,5 @@ CHIP CPU {
 
     PARTS:
     // Put your code here:
+    ALU(x=,y=, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], ng=instruction[6], ot=outM);
 }
