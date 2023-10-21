@@ -39,6 +39,13 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
-    ALU(x=,y=, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], ng=instruction[6], ot=outM);
+    // Put your code here:  
+
+    // inM -> ALU
+    Mux(a=, b=inM, sel=instruction[12], out=ax)
+    // AReg buildup
+    Mux(a=, b=instruction, sel=instruction[15], out=aregIn)
+    Register(in=aregIn, load=, out=aregOut)
+
+    ALU(x=ax,y=, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], ng=instruction[6], ot=outM);
 }
