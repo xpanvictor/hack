@@ -20,6 +20,12 @@ int main()
         {
             cout << "Lvalue: " << assembly_parser.symbol() << endl;
         }
+        else
+        {
+            cout << "*Comp: " << assembly_parser.comp() << endl;
+            cout << "*Dest: " << assembly_parser.dest() << endl;
+            cout << "*Jump: " << assembly_parser.jump() << endl;
+        }
     }
 
     return 0;

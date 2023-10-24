@@ -69,7 +69,7 @@ public:
      */
     string comp(void);
     /**
-     * Returns the symbolic dest part
+     * Returns the symbolic jump part
      * Note: Only called when instructionType is C_INSTRUCTION
      * */
     string jump(void);

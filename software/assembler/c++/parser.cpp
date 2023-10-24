@@ -130,5 +130,48 @@ string Parser::symbol(void)
     if (current_instruction_type == A_INSTRUCTION)
         return current_line.substr(1);
     else
-        return current_line.substr(1, current_line.length() - 1);
+        return current_line.substr(1, current_line.length() - 3);
+}
+
+string Parser::dest(void)
+{
+    if (instructionType() != C_INSTRUCTION)
+        throw "InvalidType";
+
+    int eq_sign_pos = current_line.find('=');
+    if (eq_sign_pos == string::npos)
+        return "";
+
+    return current_line.substr(0, eq_sign_pos);
+}
+
+string Parser::comp(void)
+{
+    if (instructionType() != C_INSTRUCTION)
+        throw "InvalidType";
+
+    int eq_sign_pos = current_line.find('=');
+    int semicolon_sign_pos = current_line.find(';');
+
+    bool neqp = eq_sign_pos == string::npos;
+    bool nscp = semicolon_sign_pos == string::npos;
+
+    if (nscp)
+        semicolon_sign_pos = current_line.length();
+    if (neqp)
+        eq_sign_pos = semicolon_sign_pos;
+
+    return current_line.substr(eq_sign_pos + 1, semicolon_sign_pos - eq_sign_pos);
+}
+
+string Parser::jump(void)
+{
+    if (instructionType() != C_INSTRUCTION)
+        throw "InvalidType";
+
+    int semicolon_sign_pos = current_line.find(';');
+    if (semicolon_sign_pos == string::npos)
+        return "N";
+
+    return current_line.substr(semicolon_sign_pos + 1);
 }
