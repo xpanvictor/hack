@@ -81,7 +81,7 @@ Parser::~Parser(void)
 
 void Parser::advance(void)
 {
-    while (true)
+    while (hasMoreLines())
     {
         int endPos = assembly_content.find('\n', current_pos);
         if (endPos == std::string::npos)
