@@ -14,9 +14,8 @@ int main()
 
     while (assembly_parser.hasMoreLines())
     {
-        cout << "Stepping" << endl;
+        // cout << "Stepping: " << assembly_parser.line_counter << endl;
         assembly_parser.advance();
-        assembly_parser.instructionType();
     }
 
     return 0;

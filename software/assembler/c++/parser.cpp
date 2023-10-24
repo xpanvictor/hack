@@ -93,17 +93,21 @@ void Parser::advance(void)
             endPos = assembly_content.length();
 
         // Ignore whitespace and comment
-        current_line = assembly_content.substr(current_pos, endPos);
+        current_line = assembly_content.substr(current_pos, endPos - current_pos);
+        line_counter++;
+
         bool isComment = current_line.find("//") == 0;
-        bool isWhiteSpace = current_line.find_first_not_of(" \t\n\r");
+        bool isWhiteSpace = current_line.find_first_not_of(" \t\n\r") > 0;
 
         // change current position
         current_pos = endPos + 1;
         if (isComment || isWhiteSpace)
             continue;
+
         break;
     }
-    cout << current_line << endl;
+
+    cout << instructionType() << endl;
 }
 
 EInstructionType Parser::instructionType(void)

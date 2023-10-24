@@ -36,7 +36,7 @@ public:
 
     unordered_map<string, int> symbol_table;
     int assembly_file_line_size;
-    // int line_counter;
+    int line_counter = 0;
     int assembly_counter = 0;
     ECurrentPhase current_phase;
     string current_line;
