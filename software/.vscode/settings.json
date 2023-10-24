@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "*.excalidraw": "json",
+        "*.excalidrawlib": "json",
+        ".env*": "dotenv",
+        "stat.h": "c",
+        "user.h": "c",
+        "*.tcc": "cpp",
+        "fstream": "cpp",
+        "iosfwd": "cpp"
+    }
+}

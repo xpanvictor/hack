@@ -12,5 +12,11 @@ int main()
 
     Parser assembly_parser = Parser("Add.asm");
 
+    while (assembly_parser.hasMoreLines())
+    {
+        cout << "Stepping" << endl;
+        assembly_parser.advance();
+    }
+
     return 0;
 }
