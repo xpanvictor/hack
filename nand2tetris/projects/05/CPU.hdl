@@ -39,13 +39,35 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:  
 
     // inM -> ALU
-    Mux(a=, b=inM, sel=instruction[12], out=ax)
-    // AReg buildup
-    Mux(a=, b=instruction, sel=instruction[15], out=aregIn)
-    Register(in=aregIn, load=, out=aregOut)
+    Mux16(a=aregOut, b=inM, sel=instruction[12], out=ax);
 
-    ALU(x=ax,y=, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], ng=instruction[6], ot=outM);
+    // AReg buildup
+    Mux16(a=instruction, b=aluOut, sel=instruction[15], out=aregIn);
+    Register(in=aregIn, load=instruction[5], out=aregOut, out[1..15]=addressM);
+    // DReg buildup
+    Register(in=aluOut, load=instruction[4], out=dregOut);
+    // A | M
+    Mux16(a=aregOut, b=inM, sel=instruction[12], out=aOrm);
+
+    ALU(x=ax, y=aOrm, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluOut, out=outM, zr=zr, ng=ng);
+    // writeM
+    And(a=instruction[3], b=true, out=writeM);
+
+    // Program counter
+    And(a=ng, b=instruction[2], out=j1ng);
+    And(a=zr, b=instruction[1], out=j2zr);
+    // neither zr nor ng
+    Not(in=zr, out=nzr);
+    Not(in=ng, out=nng);
+    And(a=nzr, b=nng, out=nzrnng);
+    // j3
+    And(a=nzrnng, b=instruction[0], out=j3nzrnng);
+
+    Or(a=j1ng, b=j2zr, out=p1);
+    Or(a=j3nzrnng, b=p1, out=p0);
+    Not(in=p0, out=np0);
+
+    PC(in=aregOut, load=p0, inc=np0, reset=reset, out[1..15]=pc);
 }
