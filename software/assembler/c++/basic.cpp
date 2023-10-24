@@ -16,6 +16,10 @@ int main()
     {
         // cout << "Stepping: " << assembly_parser.line_counter << endl;
         assembly_parser.advance();
+        if (assembly_parser.instructionType() < 2)
+        {
+            cout << "Lvalue: " << assembly_parser.symbol() << endl;
+        }
     }
 
     return 0;

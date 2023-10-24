@@ -16,8 +16,8 @@ enum ECurrentPhase
 enum EInstructionType
 {
     A_INSTRUCTION,
-    C_INSTRUCTION,
-    L_INSTRUCTION
+    L_INSTRUCTION,
+    C_INSTRUCTION
 };
 
 class Parser
@@ -56,12 +56,11 @@ public:
     EInstructionType instructionType(void);
     /**
      * Returns symbol of current instruction
-     * Note: Should be called only if instructionType is A | L Instruction
      */
     string symbol(void);
     /**
      * Returns the symbolic dest part
-     * Note: Only called when instructionType is C_INSTRUCTION
+     * Note: Should be called only if instructionType is A | L Instruction
      */
     string dest(void);
     /**

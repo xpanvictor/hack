@@ -106,8 +106,6 @@ void Parser::advance(void)
 
         break;
     }
-
-    cout << instructionType() << endl;
 }
 
 EInstructionType Parser::instructionType(void)
@@ -122,4 +120,15 @@ EInstructionType Parser::instructionType(void)
     }
     else
         return C_INSTRUCTION;
+}
+
+string Parser::symbol(void)
+{
+    EInstructionType current_instruction_type = instructionType();
+    if (current_instruction_type > 1)
+        throw "InvalidType";
+    if (current_instruction_type == A_INSTRUCTION)
+        return current_line.substr(1);
+    else
+        return current_line.substr(1, current_line.length() - 1);
 }
