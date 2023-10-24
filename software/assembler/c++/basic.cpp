@@ -16,6 +16,7 @@ int main()
     {
         cout << "Stepping" << endl;
         assembly_parser.advance();
+        assembly_parser.instructionType();
     }
 
     return 0;

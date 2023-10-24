@@ -79,6 +79,11 @@ Parser::~Parser(void)
     binary_file_writer.close();
 }
 
+bool Parser::hasMoreLines(void)
+{
+    return current_pos < assembly_content.length();
+}
+
 void Parser::advance(void)
 {
     while (hasMoreLines())
@@ -101,7 +106,16 @@ void Parser::advance(void)
     cout << current_line << endl;
 }
 
-bool Parser::hasMoreLines(void)
+EInstructionType Parser::instructionType(void)
 {
-    return current_pos < assembly_content.length();
+    if (current_line.find("@") != string::npos)
+    {
+        return A_INSTRUCTION;
+    }
+    else if (current_line.find("(") != string::npos)
+    {
+        return L_INSTRUCTION;
+    }
+    else
+        return C_INSTRUCTION;
 }
