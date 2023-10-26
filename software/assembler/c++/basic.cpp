@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "code.h"
 
 #define sum(a, b) (a + b);
 
@@ -23,7 +24,7 @@ int main()
         else
         {
             cout << "*Comp: " << assembly_parser.comp() << endl;
-            cout << "*Dest: " << assembly_parser.dest() << endl;
+            cout << "*Dest: " << assembly_parser.dest() << ">> " << dest(assembly_parser.dest()) << endl;
             cout << "*Jump: " << assembly_parser.jump() << endl;
         }
     }
