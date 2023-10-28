@@ -16,7 +16,6 @@ using namespace std;
 
 namespace CodeModule
 {
-    string stripNewlineChar(const string &raw);
     string dest(string destCode);
     string jump(string jumpCode);
     string comp(string compCode);

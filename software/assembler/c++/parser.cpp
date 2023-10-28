@@ -1,6 +1,22 @@
 
 #include "parser.h"
 
+string stripNonCode(const string &raw)
+{
+    if (!raw.empty())
+    {
+        regex nonCodePattern("(\\s|\\t)+|//.*$");
+        string strippedWhitespace = regex_replace(raw, nonCodePattern, "");
+
+        size_t comment_point = strippedWhitespace.find("//");
+        if (comment_point != string::npos)
+            return strippedWhitespace.substr(0, comment_point);
+        else
+            return strippedWhitespace;
+    }
+    return raw;
+}
+
 Parser::Parser(const char *filepath)
 {
     std::cout << "Reading assembly file '" << filepath << "'" << endl;
@@ -93,7 +109,9 @@ void Parser::advance(void)
             endPos = assembly_content.length();
 
         // Ignore whitespace and comment
-        current_line = assembly_content.substr(current_pos, endPos - current_pos);
+        string rawLine = assembly_content.substr(current_pos, endPos - current_pos);
+        current_line = stripNonCode(rawLine);
+        // cout << current_line << endl;
         line_counter++;
 
         bool isComment = current_line.find("//") == 0;

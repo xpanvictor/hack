@@ -22,18 +22,7 @@ string CodeModule::dest(string destCode)
 
 namespace CodeModule
 {
-    string stripNewlineChar(const string &raw)
-    {
-        if (!raw.empty())
-        {
-            size_t lastNonWhitespace = raw.find_last_not_of(" \t\r\n");
-            if (lastNonWhitespace != string::npos)
-            {
-                return raw.substr(0, lastNonWhitespace + 1);
-            }
-        }
-        return raw;
-    }
+
     string comp(string compCode)
     {
         string actOnM = compCode.find("M") == string::npos ? "1" : "0";
@@ -42,9 +31,8 @@ namespace CodeModule
 
     string jump(string jumpCode)
     {
-        string parsedJumpCode = stripNewlineChar(jumpCode);
         string res;
-        auto jumpCodeItr = TJumpCodes.find(parsedJumpCode);
+        auto jumpCodeItr = TJumpCodes.find(jumpCode);
         if (jumpCodeItr == TJumpCodes.end())
             res = "000";
         else

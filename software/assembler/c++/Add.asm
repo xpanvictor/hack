@@ -5,12 +5,12 @@
 
 // Computes R2 = max(R0, R1)  (R0,R1,R2 refer to RAM[0],RAM[1],RAM[2])
 
-   @R0
+   0;JMP
    D=M              // D = first number
    @R1
    D=D-M            // D = first number - second number
    @OUTPUT_FIRST
-   D;JGT            // if D>0 (first is greater) goto output_first
+   0;JGE
    @R1
    D=M              // D = second number
    @OUTPUT_D
@@ -20,8 +20,7 @@
    D=M              // D = first number
 (OUTPUT_D)
    @R2
-   M=D              // M[2] = D (greatest number)
+   0;JMP              // M[2] = D (greatest number)
 (INFINITE_LOOP)
    @INFINITE_LOOP
    0;JMP            // infinite loop
-    

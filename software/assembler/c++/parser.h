@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <unordered_map>
 
 #pragma once
@@ -19,6 +20,10 @@ enum EInstructionType
     L_INSTRUCTION,
     C_INSTRUCTION
 };
+
+/// Strips out whitespace, newline, tab
+/// and comments
+string stripNonCode(const string &raw);
 
 class Parser
 {
