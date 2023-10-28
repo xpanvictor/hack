@@ -171,7 +171,7 @@ string Parser::jump(void)
 
     int semicolon_sign_pos = current_line.find(';');
     if (semicolon_sign_pos == string::npos)
-        return "N";
+        return "NUL";
 
     return current_line.substr(semicolon_sign_pos + 1);
 }

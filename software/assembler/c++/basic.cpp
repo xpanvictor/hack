@@ -15,17 +15,19 @@ int main()
 
     while (assembly_parser.hasMoreLines())
     {
-        // cout << "Stepping: " << assembly_parser.line_counter << endl;
+        // cout << "Stepping: " << assembly_parser.instructionType() << endl;
         assembly_parser.advance();
         if (assembly_parser.instructionType() < 2)
         {
-            cout << "Lvalue: " << assembly_parser.symbol() << endl;
+            // cout << "Lvalue: " << assembly_parser.symbol() << endl;
         }
         else
         {
-            cout << "*Comp: " << assembly_parser.comp() << endl;
-            cout << "*Dest: " << assembly_parser.dest() << ">> " << dest(assembly_parser.dest()) << endl;
-            cout << "*Jump: " << assembly_parser.jump() << endl;
+            string jmpRes = assembly_parser.jump();
+            // cout << jmpRes << endl;
+            // cout << "*Comp: " << assembly_parser.comp() << endl;
+            // cout << "*Dest: " << assembly_parser.dest() << ">> " << CodeModule::dest(assembly_parser.dest()) << endl;
+            cout << CodeModule::jump(jmpRes) << endl;
         }
     }
 
