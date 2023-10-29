@@ -23,7 +23,7 @@ Parser::Parser(const char *filepath)
     assembly_content = "";
 
     string filename = (string)filepath;
-    auto extPos = filename.find(".");
+    auto extPos = filename.find_last_of(".");
     binay_file_path = filename.substr(0, extPos) + ".hack";
 
     try
