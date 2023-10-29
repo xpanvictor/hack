@@ -22,9 +22,15 @@ Parser::Parser(const char *filepath)
     std::cout << "Reading assembly file '" << filepath << "'" << endl;
     assembly_content = "";
 
+    string filename = (string)filepath;
+    auto extPos = filename.find(".");
+    binay_file_path = filename.substr(0, extPos) + ".hack";
+
     try
     {
         assembly_file_reader.open(filepath, ios::in);
+        // get writer ready
+        binary_file_writer.open(binay_file_path, ios::trunc);
         if (assembly_file_reader.is_open())
         {
             // assembly_content = string(istreambuf_iterator<char>(assembly_file_reader), istreambuf_iterator<char>());
@@ -177,7 +183,10 @@ string Parser::comp(void)
     if (nscp)
         semicolon_sign_pos = current_line.length();
     if (neqp)
-        eq_sign_pos = semicolon_sign_pos;
+    {
+        eq_sign_pos = -1;
+        semicolon_sign_pos -= 1;
+    }
 
     return current_line.substr(eq_sign_pos + 1, semicolon_sign_pos - eq_sign_pos);
 }
@@ -192,4 +201,12 @@ string Parser::jump(void)
         return "NUL";
 
     return current_line.substr(semicolon_sign_pos + 1);
+}
+
+void Parser::writeBinaryLine(string binary_line)
+{
+    if (binary_line.empty())
+        return;
+    binary_line += "\n";
+    binary_file_writer << binary_line;
 }

@@ -15,21 +15,26 @@ int main()
 
     while (assembly_parser.hasMoreLines())
     {
+        string assembly_binary_code;
         // cout << "Stepping: " << assembly_parser.instructionType() << endl;
         assembly_parser.advance();
         if (assembly_parser.instructionType() < 2)
         {
-            // cout << "Lvalue: " << assembly_parser.symbol() << endl;
+            assembly_binary_code = "0" + assembly_parser.symbol();
         }
         else
         {
-            string jmpRes = assembly_parser.jump();
-            // cout << jmpRes << endl;
-            // cout << "*Comp: " << assembly_parser.comp() << endl;
-            // cout << "*Dest: " << assembly_parser.dest() << ">> " << CodeModule::dest(assembly_parser.dest()) << endl;
-            cout << CodeModule::jump(jmpRes) << endl;
+            string CINCODE = "111";
+            string compCode = CodeModule::comp(assembly_parser.comp());
+            string destCode = CodeModule::dest(assembly_parser.dest());
+            string jumpCode = CodeModule::jump(assembly_parser.jump());
+
+            assembly_binary_code = CINCODE + compCode + destCode + jumpCode;
         }
+        assembly_parser.writeBinaryLine(assembly_binary_code);
     }
+
+    cout << "Binary code written to " << assembly_parser.binay_file_path << endl;
 
     return 0;
 }

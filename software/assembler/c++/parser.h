@@ -40,6 +40,7 @@ public:
     ~Parser(void);
 
     unordered_map<string, int> symbol_table;
+    string binay_file_path;
     int assembly_file_line_size;
     int line_counter = 0;
     int assembly_counter = 0;
@@ -78,4 +79,9 @@ public:
      * Note: Only called when instructionType is C_INSTRUCTION
      * */
     string jump(void);
+
+    /**
+     * Using the parser to write lines in the binary file
+    */
+   void writeBinaryLine(string binary_line);
 };
