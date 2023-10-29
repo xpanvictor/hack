@@ -19,7 +19,7 @@ string stripNonCode(const string &raw)
 
 Parser::Parser(const char *filepath)
 {
-    std::cout << "Reading assembly file '" << filepath << "'" << endl;
+    std::cout << "-->Reading assembly file '" << filepath << "'" << endl;
     assembly_content = "";
 
     string filename = (string)filepath;
@@ -46,22 +46,22 @@ Parser::Parser(const char *filepath)
         }
         else
         {
-            cerr << "Couldn't open file \"" << filepath << "\"" << endl;
+            cerr << "<--Couldn't open file \"" << filepath << "\"" << endl;
             return;
         }
     }
     catch (const exception &e)
     {
-        std::cerr << "Error: " << e.what() << '\n';
+        std::cerr << "<--Error: " << e.what() << '\n';
     }
 
     current_phase = INITIALIZATION;
-    cout << "File length: " << assembly_file_line_size << endl;
+    cout << "-->File length: " << assembly_file_line_size << endl;
 }
 
 void Parser::initialization_phase()
 {
-    std::cout << "Initialization phase..." << endl;
+    std::cout << "-->Initialization phase..." << endl;
     this->symbol_table = {
         {"R0", 0},
         {"R1", 1},
@@ -87,7 +87,7 @@ void Parser::initialization_phase()
         {"SCREEN", 16384},
         {"KBD", 24576},
     };
-    std::cout << "Symbol table initialized" << endl;
+    std::cout << "-->Symbol table initialized" << endl;
 }
 
 int Parser::first_pass(void)
@@ -104,6 +104,13 @@ Parser::~Parser(void)
 bool Parser::hasMoreLines(void)
 {
     return current_pos < assembly_content.length();
+}
+
+void Parser::resetParser(ECurrentPhase new_phase)
+{
+    current_pos = line_counter = assembly_counter = 0;
+    current_phase = new_phase;
+    cout << "-->New phase: " << current_phase << endl;
 }
 
 void Parser::advance(void)

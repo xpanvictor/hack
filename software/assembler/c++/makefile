@@ -1,5 +1,5 @@
 cc = g++
-basic_output = basicAssembler
+basic_output = assembler
 
-all: basic.cpp parser.cpp code.cpp
-	$(cc) basic.cpp parser.cpp code.cpp -o $(basic_output)
+all: assembler.cpp parser.cpp code.cpp
+	$(cc) assembler.cpp parser.cpp code.cpp -o $(basic_output)

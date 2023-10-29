@@ -10,8 +10,8 @@ using namespace std;
 enum ECurrentPhase
 {
     INITIALIZATION,
-    FIRST,
-    SECOND
+    FIRST_PASS,
+    SECOND_PASS
 };
 
 enum EInstructionType
@@ -82,6 +82,11 @@ public:
 
     /**
      * Using the parser to write lines in the binary file
-    */
-   void writeBinaryLine(string binary_line);
+     */
+    void writeBinaryLine(string binary_line);
+
+    /**
+     * Reset the parser to initiaite another phase
+     */
+    void resetParser(ECurrentPhase);
 };
