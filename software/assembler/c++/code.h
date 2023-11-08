@@ -38,4 +38,7 @@ namespace CodeModule
     //     {"D&A", "000000"},
     //     {"D|A", "010101"},
     string comp(string compCode);
+
+    // utility function to check if string is an integer
+    bool isInteger(string val);
 }

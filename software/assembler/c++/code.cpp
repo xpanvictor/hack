@@ -80,4 +80,16 @@ namespace CodeModule
         return res;
     }
 
+    bool isInteger(string val)
+    {
+        try
+        {
+            stoi(val);
+            return true;
+        }
+        catch (const std::exception &e)
+        {
+            return false;
+        }
+    }
 }

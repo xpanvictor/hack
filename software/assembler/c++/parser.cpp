@@ -157,7 +157,7 @@ string Parser::symbol(void)
 {
     EInstructionType current_instruction_type = instructionType();
     if (current_instruction_type > 1)
-        throw "InvalidType";
+        throw std::invalid_argument("symbol can't be called for C Instruction");
     if (current_instruction_type == A_INSTRUCTION)
         return current_line.substr(1);
     else
@@ -167,7 +167,7 @@ string Parser::symbol(void)
 string Parser::dest(void)
 {
     if (instructionType() != C_INSTRUCTION)
-        throw "InvalidType";
+        throw std::invalid_argument("can't get dest for A Instruction");
 
     int eq_sign_pos = current_line.find('=');
     if (eq_sign_pos == string::npos)
@@ -179,7 +179,7 @@ string Parser::dest(void)
 string Parser::comp(void)
 {
     if (instructionType() != C_INSTRUCTION)
-        throw "InvalidType";
+        throw std::invalid_argument("can't get comp of an A Instruction");
 
     int eq_sign_pos = current_line.find('=');
     int semicolon_sign_pos = current_line.find(';');
@@ -201,7 +201,7 @@ string Parser::comp(void)
 string Parser::jump(void)
 {
     if (instructionType() != C_INSTRUCTION)
-        throw "InvalidType";
+        throw std::invalid_argument("jump called for A Instruction");
 
     int semicolon_sign_pos = current_line.find(';');
     if (semicolon_sign_pos == string::npos)
