@@ -65,8 +65,22 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// # Panics: if command type can't be deciphered
     pub fn command_type(self) -> CommandType {
-        todo!()
+        let command = self
+            .current_command
+            .split_ascii_whitespace()
+            .next()
+            .expect("Command section of current instruction couldn't be extracted");
+
+        match command {
+            "and" | "or" | "sub" | "eq" | "neg" | "gt" | "lt" | "not" | "add" => {
+                CommandType::C_ARITHMETIC
+            }
+            "push" => CommandType::C_PUSH,
+            "pop" => CommandType::C_POP,
+            _ => panic!("Couldn't decipher instruction type"),
+        }
     }
 
     pub fn arg1(self) -> &'a str {
