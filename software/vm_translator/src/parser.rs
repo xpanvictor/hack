@@ -16,27 +16,80 @@ pub enum CommandType {
 pub struct Parser<'a> {
     vm_source_code: String,
     current_command: &'a str,
+    current_line_no: u32,
+    total_file_line_no: u32,
 }
 
 impl<'a> Parser<'a> {
     pub fn new(filepath: &str) -> Parser<'a> {
-        Parser {
+        println!("Reading vm file: {}", filepath);
+        let mut parser = Parser {
             vm_source_code: fs::read_to_string(filepath).expect("Couldn't read from file!"),
             current_command: "",
+            current_line_no: 0,
+            total_file_line_no: 0,
+        };
+        parser.total_file_line_no = parser.vm_source_code.lines().count() as u32;
+        parser
+    }
+
+    /// Just strips out whitespace and comments
+    fn clean_line(line: &mut str) {
+        let _ = line.trim();
+        if line.starts_with("//") {
+            // line.replace(, "")
         }
     }
 
-    pub fn has_more_lines(self) -> bool {}
+    pub fn has_more_lines(&'a self) -> bool {
+        self.current_line_no < self.total_file_line_no
+    }
 
-    pub fn advance(self) {}
+    /// # Panics
+    /// Should be called only if has_more_lines() returns true
+    pub fn advance(&'a mut self) {
+        if !self.has_more_lines() {
+            panic!("Can't advance since no more vm code to interprete.")
+        };
+        self.current_command = self
+            .vm_source_code
+            .lines()
+            .nth(self.current_line_no as usize)
+            .expect("Error fetching next command");
+        self.current_line_no += 1;
+        // Self::clean_line(&mut self.current_command);
+        // Recursively calls self as long as current command is empty
+        if self.current_command.is_empty() {
+            // Self::advance(&'a self);
+            todo!()
+        }
+    }
 
-    pub fn command_type(self) -> CommandType {}
+    pub fn command_type(self) -> CommandType {
+        todo!()
+    }
 
-    pub fn arg1(self) -> &'a str {}
+    pub fn arg1(self) -> &'a str {
+        todo!()
+    }
 
     /// Returns second argument of current command
     /// # Panics
     /// Only call if current command type
     /// is C_PUSH, C_CALL, C_POP, C_FUNCTION
-    pub fn arg2(self) -> u128 {}
+    pub fn arg2(self) -> u128 {
+        todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic(expected = "Can't advance since no more vm code to interprete.")]
+    fn testing_advance_when_no_line() {
+        let parser = Parser::new("");
+        todo!("Impl to test when we try to advance an empty or completed file")
+    }
 }
