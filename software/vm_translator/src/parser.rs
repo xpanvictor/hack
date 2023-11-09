@@ -34,11 +34,12 @@ impl<'a> Parser<'a> {
     }
 
     /// Just strips out whitespace and comments
-    fn clean_line(line: &mut str) {
-        let _ = line.trim();
+    fn clean_line<'b>(line: &'b str) -> &'b str {
+        let mut line = line.trim();
         if line.starts_with("//") {
-            // line.replace(, "")
-        }
+            line = "";
+        };
+        return line;
     }
 
     pub fn has_more_lines(&'a self) -> bool {
@@ -57,7 +58,7 @@ impl<'a> Parser<'a> {
             .nth(self.current_line_no as usize)
             .expect("Error fetching next command");
         self.current_line_no += 1;
-        // Self::clean_line(&mut self.current_command);
+        self.current_command = Self::clean_line(&self.current_command);
         // Recursively calls self as long as current command is empty
         if self.current_command.is_empty() {
             // Self::advance(&'a self);
