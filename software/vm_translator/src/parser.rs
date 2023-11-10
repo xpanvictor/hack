@@ -1,8 +1,8 @@
 use std::fs;
 
 #[allow(non_camel_case_types)]
-pub enum CommandType {
-    C_ARITHMETIC,
+pub enum CommandType<'a> {
+    C_ARITHMETIC(&'a str),
     C_PUSH,
     C_LABEL,
     C_POP,
@@ -15,7 +15,7 @@ pub enum CommandType {
 
 pub struct Parser<'a> {
     vm_source_code: String,
-    current_command: &'a str,
+    pub current_command: &'a str,
     current_line_no: u32,
     total_file_line_no: u32,
 }
@@ -52,22 +52,28 @@ impl<'a> Parser<'a> {
         if !self.has_more_lines() {
             panic!("Can't advance since no more vm code to interprete.")
         };
-        self.current_command = self
-            .vm_source_code
-            .lines()
-            .nth(self.current_line_no as usize)
-            .expect("Error fetching next command");
-        self.current_line_no += 1;
-        self.current_command = Self::clean_line(&self.current_command);
-        // Recursively calls self as long as current command is empty
-        if self.current_command.is_empty() {
-            // Self::advance(&'a self);
-            todo!()
+        let mut is_appropriate_line = false;
+        while !is_appropriate_line {
+            self.current_command = self
+                .vm_source_code
+                .lines()
+                .nth(self.current_line_no as usize)
+                .expect("Error fetching next command");
+            self.current_line_no += 1;
+            self.current_command = Self::clean_line(&self.current_command);
+            if self.current_command.is_empty() {
+                is_appropriate_line = true;
+            }
         }
+        // // Recursively calls self as long as current command is empty
+        // if self.current_command.is_empty() {
+        //     self.advance();
+        // }
     }
 
-    /// # Panics: if command type can't be deciphered
-    pub fn command_type(self) -> CommandType {
+    /// # Panics
+    /// if command type can't be deciphered
+    pub fn command_type(self) -> CommandType<'a> {
         let command = self
             .current_command
             .split_ascii_whitespace()
@@ -76,7 +82,7 @@ impl<'a> Parser<'a> {
 
         match command {
             "and" | "or" | "sub" | "eq" | "neg" | "gt" | "lt" | "not" | "add" => {
-                CommandType::C_ARITHMETIC
+                CommandType::C_ARITHMETIC(command)
             }
             "push" => CommandType::C_PUSH,
             "pop" => CommandType::C_POP,

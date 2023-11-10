@@ -7,7 +7,7 @@ use std::{
 
 pub struct CodeWriter {
     translated_assembly_file_handle: File,
-    output_file: path::PathBuf,
+    output_file_path: path::PathBuf,
 }
 
 impl CodeWriter {
@@ -18,7 +18,7 @@ impl CodeWriter {
                 .truncate(true)
                 .open(output_file)
                 .expect(&format!("Couldn't write to {}!", output_file)),
-            output_file: path::Path::new(output_file).to_path_buf(),
+            output_file_path: path::Path::new(output_file).to_path_buf(),
         }
     }
 
@@ -42,7 +42,7 @@ impl Drop for CodeWriter {
         // self.translated_assembly_file_handle;
         println!(
             "Assembly file written to {:?}",
-            self.output_file.file_name()
+            self.output_file_path.file_name()
         )
     }
 }
