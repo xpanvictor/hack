@@ -36,9 +36,10 @@ impl<'a> Parser<'a> {
     /// Just strips out whitespace and comments
     fn clean_line<'b>(line: &'b str) -> &'b str {
         let mut line = line.trim();
-        if line.starts_with("//") {
-            line = "";
-        };
+        if line.contains("//") {
+            line = line.split_once("//").unwrap().0;
+            line = line.trim();
+        }
         return line;
     }
 

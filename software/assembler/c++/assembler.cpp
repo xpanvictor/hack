@@ -34,9 +34,10 @@ int main(int argc, char *argv[])
             // Check if symbol is a number already
             bool isSymbolInteger = CodeModule::isInteger(curr_symbol);
             if (
-                isSymbolInteger &&
+                !isSymbolInteger &&
                 assembly_parser.symbol_table.find(curr_symbol) == assembly_parser.symbol_table.end())
             {
+                // TODO: Segfault finding space in hashtable
                 // symbol doesn't exist, addEntry
                 assembly_parser.symbol_table.insert(make_pair(curr_symbol, current_free_pos));
                 current_free_pos++;
@@ -59,12 +60,16 @@ int main(int argc, char *argv[])
             if (!CodeModule::isInteger(curr_symbol))
             {
                 auto itrSymbolValue = assembly_parser.symbol_table.find(curr_symbol);
+                if (itrSymbolValue == assembly_parser.symbol_table.end())
+                {
+                    cerr << "Symbol not found in symbol table!" << endl;
+                    throw "Symbol not found";
+                }
                 iCurr_symbol = itrSymbolValue->second;
             }
             else
             {
                 iCurr_symbol = std::stoi(curr_symbol);
-                cout << iCurr_symbol << endl;
             }
             binary_symbol_value = bitset<15>(iCurr_symbol).to_string();
             assembly_binary_code = "0" + binary_symbol_value;

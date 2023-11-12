@@ -22,14 +22,14 @@ impl CodeWriter {
         }
     }
 
-    pub fn write_arithmetic(mut self, command: &str) {
+    pub fn write_arithmetic(&mut self, command: &str) {
         self.translated_assembly_file_handle
             .write((format!("{}\n", command)).as_bytes())
             .expect("Couldn't write to output file");
         todo!("Implementation to convert command to assembly code");
     }
 
-    pub fn write_push_pop(mut self, command: &str) {
+    pub fn write_push_pop(&mut self, command: &str) {
         let assembly_translation = "";
         self.translated_assembly_file_handle
             .write(format!("{}\n", assembly_translation).as_bytes())

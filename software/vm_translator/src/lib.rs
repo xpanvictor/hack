@@ -15,7 +15,9 @@ pub fn vm_translator(mut args: impl Iterator<Item = String>) {
     let output_filepath = format!("{}.asm", filepath.rsplit_once(".").unwrap().0);
 
     let mut vm_parser = Parser::new(&filepath);
-    let code_writer = CodeWriter::new(&output_filepath);
+    let mut code_writer = CodeWriter::new(&output_filepath);
 
-    while vm_parser.has_more_lines() {}
+    while vm_parser.has_more_lines() {
+        code_writer.write_arithmetic("j")
+    }
 }
