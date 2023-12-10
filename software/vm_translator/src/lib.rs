@@ -18,6 +18,7 @@ pub fn vm_translator(mut args: impl Iterator<Item = String>) {
     let mut code_writer = CodeWriter::new(&output_filepath);
 
     while vm_parser.has_more_lines() {
+        // vm_parser.advance();
         code_writer.write_arithmetic("j")
     }
 }

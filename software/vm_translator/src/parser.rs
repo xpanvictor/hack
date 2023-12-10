@@ -1,11 +1,16 @@
 use std::fs;
 
+pub struct ArgumentPair<'a> {
+    first: &'a str,
+    second: &'a str,
+}
+
 #[allow(non_camel_case_types)]
 pub enum CommandType<'a> {
     C_ARITHMETIC(&'a str),
-    C_PUSH,
+    C_PUSH(ArgumentPair<'a>),
     C_LABEL,
-    C_POP,
+    C_POP(ArgumentPair<'a>),
     C_GOTO,
     C_IF,
     C_FUNCTION,
@@ -75,9 +80,8 @@ impl<'a> Parser<'a> {
     /// # Panics
     /// if command type can't be deciphered
     pub fn command_type(self) -> CommandType<'a> {
-        let command = self
-            .current_command
-            .split_ascii_whitespace()
+        let mut command_list = self.current_command.split_ascii_whitespace();
+        let command = command_list
             .next()
             .expect("Command section of current instruction couldn't be extracted");
 
@@ -85,13 +89,36 @@ impl<'a> Parser<'a> {
             "and" | "or" | "sub" | "eq" | "neg" | "gt" | "lt" | "not" | "add" => {
                 CommandType::C_ARITHMETIC(command)
             }
-            "push" => CommandType::C_PUSH,
-            "pop" => CommandType::C_POP,
+            "push" => CommandType::C_PUSH(ArgumentPair {
+                first: command_list
+                    .next()
+                    .expect("First argument of push is expected!"),
+                second: command_list
+                    .next()
+                    .expect("Second argument of push is expected!"),
+            }),
+            "pop" => CommandType::C_POP(ArgumentPair {
+                first: command_list
+                    .next()
+                    .expect("First argument of pop is expected!"),
+                second: command_list
+                    .next()
+                    .expect("Second argument of pop is expected!"),
+            }),
             _ => panic!("Couldn't decipher instruction type"),
         }
     }
 
+    /// Returns first argument of current command
+    /// # Panics
+    /// Dont call for C_RETURN type
     pub fn arg1(self) -> &'a str {
+        match self.command_type() {
+            CommandType::C_RETURN => panic!("Arg 1 can't be called with RETURN type"),
+            CommandType::C_ARITHMETIC(command) => command,
+            CommandType::C_PUSH(argument_pair) => argument_pair.first,
+            _ => "",
+        };
         todo!()
     }
 
@@ -100,6 +127,9 @@ impl<'a> Parser<'a> {
     /// Only call if current command type
     /// is C_PUSH, C_CALL, C_POP, C_FUNCTION
     pub fn arg2(self) -> u128 {
+        match self.command_type() {
+            _ => (),
+        };
         todo!()
     }
 }
