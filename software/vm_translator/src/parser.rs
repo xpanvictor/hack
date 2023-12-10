@@ -2,7 +2,7 @@ use std::fs;
 
 pub struct ArgumentPair<'a> {
     first: &'a str,
-    second: &'a str,
+    second: u128,
 }
 
 #[allow(non_camel_case_types)]
@@ -95,7 +95,9 @@ impl<'a> Parser<'a> {
                     .expect("First argument of push is expected!"),
                 second: command_list
                     .next()
-                    .expect("Second argument of push is expected!"),
+                    .expect("Second argument of push is expected!")
+                    .parse()
+                    .unwrap(),
             }),
             "pop" => CommandType::C_POP(ArgumentPair {
                 first: command_list
@@ -103,7 +105,9 @@ impl<'a> Parser<'a> {
                     .expect("First argument of pop is expected!"),
                 second: command_list
                     .next()
-                    .expect("Second argument of pop is expected!"),
+                    .expect("Second argument of pop is expected!")
+                    .parse()
+                    .unwrap(),
             }),
             _ => panic!("Couldn't decipher instruction type"),
         }
@@ -128,7 +132,8 @@ impl<'a> Parser<'a> {
     /// is C_PUSH, C_CALL, C_POP, C_FUNCTION
     pub fn arg2(self) -> u128 {
         match self.command_type() {
-            _ => (),
+            CommandType::C_PUSH(argument_pair) => argument_pair.second,
+            _ => panic!("Only call for C_PUSH, C_POP, C_CALL, C_FUNCTION commandType"),
         };
         todo!()
     }
