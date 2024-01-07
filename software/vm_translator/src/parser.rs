@@ -122,8 +122,7 @@ impl<'a> Parser<'a> {
             CommandType::C_ARITHMETIC(command) => command,
             CommandType::C_PUSH(argument_pair) => argument_pair.first,
             _ => "",
-        };
-        todo!()
+        }
     }
 
     /// Returns second argument of current command
@@ -132,21 +131,22 @@ impl<'a> Parser<'a> {
     /// is C_PUSH, C_CALL, C_POP, C_FUNCTION
     pub fn arg2(self) -> u128 {
         match self.command_type() {
-            CommandType::C_PUSH(argument_pair) => argument_pair.second,
+            CommandType::C_PUSH(argument_pair) | CommandType::C_POP(argument_pair) => {
+                argument_pair.second
+            }
             _ => panic!("Only call for C_PUSH, C_POP, C_CALL, C_FUNCTION commandType"),
-        };
-        todo!()
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
 
     #[test]
     #[should_panic(expected = "Can't advance since no more vm code to interprete.")]
     fn testing_advance_when_no_line() {
-        let parser = Parser::new("");
+        // let parser = Parser::new("");
         todo!("Impl to test when we try to advance an empty or completed file")
     }
 }
