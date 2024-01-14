@@ -19,7 +19,7 @@ pub enum CommandType<'a> {
     C_CALL,
 }
 
-pub struct Parser<'a> {
+pub struct Parser {
     vm_source_code: String,
     pub current_command: String,
     current_line_no: u32,
@@ -49,8 +49,8 @@ return self.commands_total.vm_source_code.lines().
 }
 */
 
-impl<'a, 'b> Parser<'b> {
-    pub fn new(filepath: &str) -> Parser<'b> {
+impl Parser {
+    pub fn new(filepath: &str) -> Parser {
         println!("Reading vm file: {}", filepath);
         Parser {
             vm_source_code: fs::read_to_string(filepath)
@@ -70,13 +70,13 @@ impl<'a, 'b> Parser<'b> {
         return line;
     }
 
-    pub fn has_more_lines(&'a self) -> bool {
+    pub fn has_more_lines(&self) -> bool {
         self.vm_source_code.lines().peekable().peek().is_some()
     }
 
     /// # Panics
     /// Should be called only if has_more_lines() returns true
-    pub fn advance(&'a mut self) {
+    pub fn advance(& mut self) {
         if !self.has_more_lines() {
             panic!("Can't advance since no more vm code to interpret.")
         };

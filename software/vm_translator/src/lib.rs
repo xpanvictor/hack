@@ -10,8 +10,8 @@ use std::{
     rc::Rc,
 };
 
-use code_writer::CodeWriter;
-use parser::Parser;
+// use code_writer::CodeWriter;
+// use parser::Parser;
 
 pub fn vm_translator(mut args: impl Iterator<Item = String>) {
     args.next(); // Enter next value
