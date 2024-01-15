@@ -20,10 +20,8 @@ pub enum CommandType<'a> {
 }
 
 pub struct Parser {
-    vm_source_code: String,
+    vm_source_code: Box<dyn Iterator<Item=String>>,
     pub current_command: String,
-    current_line_no: u32,
-    // total_file_line_no: u32,
 }
 
 /*
@@ -52,49 +50,49 @@ return self.commands_total.vm_source_code.lines().
 impl Parser {
     pub fn new(filepath: &str) -> Parser {
         println!("Reading vm file: {}", filepath);
-        Parser {
-            vm_source_code: fs::read_to_string(filepath)
-                .expect("Couldn't read the source code"),
-            current_line_no: 0,
+        let mut parser = Parser {
+            vm_source_code: Box::new(
+                fs::read_to_string(filepath)
+                    .expect("Couldn't read the source code")
+                    .lines()
+                    .map(|x| x.to_string())
+                    .collect::<Vec<String>>()
+                    .into_iter()
+            ),
             current_command: "".to_owned()
-        }
+        };
+        parser.advance();
+        parser
     }
 
     /// Just strips out whitespace and comments
-    fn clean_line(line: &str) -> &str {
+    fn clean_line(line: String) -> String {
         let mut line = line.trim();
         if line.contains("//") {
             line = line.split_once("//").unwrap().0;
             line = line.trim();
         }
-        return line;
+        println!("{line}");
+        return line.to_string();
     }
 
-    pub fn has_more_lines(&self) -> bool {
-        self.vm_source_code.lines().peekable().peek().is_some()
+    pub fn has_more_lines(&mut self) -> bool {
+        // let bc = Box::(&self.vm_source_code);
+        self.vm_source_code.as_mut().peekable().peek().is_some()
     }
+
 
     /// # Panics
     /// Should be called only if has_more_lines() returns true
-    pub fn advance(& mut self) {
+    pub fn advance(&mut self) {
         if !self.has_more_lines() {
             panic!("Can't advance since no more vm code to interpret.")
         };
-        let mut is_appropriate_line = false;
-        while !is_appropriate_line {
-            // self.current_command = self
-            //     .vm_source_code
-            //     .borrow_mut()
-            //     .next()
-            //     .expect("")
-            //     .to_owned();
-            // self.current_line_no += 1;
-            // self.current_command = Self::clean_line(&self.current_command);
-            if self.current_command.is_empty() {
-                is_appropriate_line = true;
-            }
-        }
-        // // Recursively calls self as long as current command is empty
+
+        self.current_command = self.vm_source_code.next().unwrap();
+        println!("{}--noted", self.current_command);
+
+        // Recursively calls self as long as current command is empty
         // if self.current_command.is_empty() {
         //     self.advance();
         // }

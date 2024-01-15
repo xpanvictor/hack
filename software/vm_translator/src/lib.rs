@@ -11,7 +11,7 @@ use std::{
 };
 
 // use code_writer::CodeWriter;
-// use parser::Parser;
+use parser::Parser;
 
 pub fn vm_translator(mut args: impl Iterator<Item = String>) {
     args.next(); // Enter next value
@@ -20,14 +20,13 @@ pub fn vm_translator(mut args: impl Iterator<Item = String>) {
     let output_filepath = format!("{}.asm", filepath.rsplit_once(".").unwrap().0);
 
     // let mut code_writer = CodeWriter::new(&output_filepath);
-    // let parser = Parser::new(&filepath);
-    // let mut vm_parser_rc = Rc::new(RefCell::new(&parser));
-    //
-    // while vm_parser_rc.borrow().has_more_lines() {
-    //     let vm_parser = Rc::clone(&vm_parser_rc);
-    //     let mut vm_parser = vm_parser.borrow_mut();
-    //     // vm_parser.advance();
-    //     Rc::clone(&vm_parser_rc);
+    let mut parser = Parser::new(&filepath);
+
+    let mut num = 0;
+    // while parser.has_more_lines() {
+    //     num+=1;
+    //     println!("{}-{}", parser.current_command, num);
+    //     // parser.advance();
     // }
 
 }
