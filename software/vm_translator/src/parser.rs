@@ -1,5 +1,7 @@
 use std::{fs, str::Lines};
 use std::cell::RefCell;
+use std::iter::Peekable;
+use std::vec::IntoIter;
 
 pub struct ArgumentPair<'a> {
     first: &'a str,
@@ -20,7 +22,7 @@ pub enum CommandType<'a> {
 }
 
 pub struct Parser {
-    vm_source_code: Box<dyn Iterator<Item=String>>,
+    vm_source_code: Box<Peekable<IntoIter<String>>>, // Box<dyn Iterator<String>>
     pub current_command: String,
 }
 
@@ -58,6 +60,7 @@ impl Parser {
                     .map(|x| x.to_string())
                     .collect::<Vec<String>>()
                     .into_iter()
+                    .peekable()
             ),
             current_command: "".to_owned()
         };
@@ -72,13 +75,11 @@ impl Parser {
             line = line.split_once("//").unwrap().0;
             line = line.trim();
         }
-        println!("{line}");
         return line.to_string();
     }
 
     pub fn has_more_lines(&mut self) -> bool {
-        // let bc = Box::(&self.vm_source_code);
-        self.vm_source_code.as_mut().peekable().peek().is_some()
+        self.vm_source_code.peek().is_some()
     }
 
 
@@ -89,13 +90,12 @@ impl Parser {
             panic!("Can't advance since no more vm code to interpret.")
         };
 
-        self.current_command = self.vm_source_code.next().unwrap();
-        println!("{}--noted", self.current_command);
+        self.current_command = Self::clean_line(self.vm_source_code.next().unwrap());
 
         // Recursively calls self as long as current command is empty
-        // if self.current_command.is_empty() {
-        //     self.advance();
-        // }
+        if self.current_command.is_empty() {
+            self.advance();
+        }
     }
 
     // /// # Panics
