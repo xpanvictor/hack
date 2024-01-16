@@ -1,5 +1,6 @@
 // use std::fs;
 use std::{fs::File, io::Write, path};
+use crate::parser::CommandType;
 
 // OpenOptions::new()
 //             .append(true)
@@ -21,31 +22,50 @@ impl CodeWriter {
         }
     }
 
-    pub fn write_arithmetic(&mut self, command: &str) {
+    /// Helper functions
+    fn generate_comment(command: &str) -> String {
+        format!("// ----: {} ----\n", command)
+    }
+
+    fn generate_push(bp: &str, index: u128) -> String {
+        format!("@{bp}\nA=M+{index}\nD=M\n@SP\nA=M\nM=D@SP\nM=M+1")
+    }
+
+    pub fn write_arithmetic(&mut self, raw_command: Option<&str>, command: &str) {
+        self.write_to_file(command, raw_command);
+    }
+
+    /// Writes push-pop instruction
+    /// # Panics
+    /// Don't call if CommandType isn't C_PUSH or C_POP
+    pub fn write_push_pop(&mut self, raw_command: Option<&str>, command: CommandType, segment: &str, index: u128) {
+        let mut translation = String::new();
+        match command {
+            CommandType::C_PUSH(_) => {
+                translation = {
+                    let bp = match segment {
+                        "local" => "LCL",
+                        "argument" => "ARG",
+                        _ => ""
+                    };
+                    Self::generate_push(bp, index)
+                };
+            },
+            CommandType::C_POP(_) => (),
+            _ => panic!("Can't push/pop if instruction isn't a push/pop instruction")
+        };
+        self.write_to_file(translation.as_str(), raw_command);
+    }
+
+    fn write_to_file(&mut self, translation: &str, vm_command: Option<&str>) {
+        let total_translation = if let Some(vm_command_str) = vm_command {
+            format!("{}{}\n", Self::generate_comment(vm_command_str), translation)
+        } else {
+            format!("{}\n", translation)
+        };
         self.translated_assembly_file_handle
-            .write((format!("{}\n", command)).as_bytes())
-            .expect("Couldn't write to output file");
-        // todo!("Implementation to convert command to assembly code");
-    }
-
-    pub fn write_push_pop(&mut self, command: &str) {
-        let assembly_translation = "";
-        Self::write_to_file(
-            &mut self.translated_assembly_file_handle,
-            assembly_translation,
-            Some(command),
-        );
-    }
-
-    fn write_to_file(file_handle: &mut File, translation: &str, vm_command: Option<&str>) {
-        if let Some(vm_command_str) = vm_command {
-            file_handle
-                .write(format!("//{}\n", vm_command_str).as_bytes())
-                .expect("Couldn't write push-pop translation to output file");
-            file_handle
-                .write(format!("{}\n", translation).as_bytes())
-                .expect("Couldn't write push-pop translation to output file");
-        }
+            .write_all(total_translation.as_bytes())
+            .expect("Couldn't write translation to output file");
     }
 }
 
@@ -55,6 +75,7 @@ impl Drop for CodeWriter {
         println!(
             "Assembly file written to {:?}",
             self.output_file_path.file_name()
-        )
+        );
+        // todo!("Infinite loop code generation")
     }
 }

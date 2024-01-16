@@ -1,19 +1,18 @@
-use std::{fs, str::Lines};
-use std::cell::RefCell;
+use std::{fs};
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
-pub struct ArgumentPair<'a> {
-    first: &'a str,
+pub struct ArgumentPair {
+    first: String,
     second: u128,
 }
 
 #[allow(non_camel_case_types)]
-pub enum CommandType<'a> {
-    C_ARITHMETIC(&'a str),
-    C_PUSH(ArgumentPair<'a>),
+pub enum CommandType {
+    C_ARITHMETIC(String),
+    C_PUSH(ArgumentPair),
     C_LABEL,
-    C_POP(ArgumentPair<'a>),
+    C_POP(ArgumentPair),
     C_GOTO,
     C_IF,
     C_FUNCTION,
@@ -49,7 +48,7 @@ return self.commands_total.vm_source_code.lines().
 }
 */
 
-impl Parser {
+impl<> Parser {
     pub fn new(filepath: &str) -> Parser {
         println!("Reading vm file: {}", filepath);
         let mut parser = Parser {
@@ -98,66 +97,69 @@ impl Parser {
         }
     }
 
-    // /// # Panics
-    // /// if command type can't be deciphered
-    // pub fn command_type(self) -> CommandType<'a> {
-    //     let mut command_list = self.current_command.split_ascii_whitespace();
-    //     let command = command_list
-    //         .next()
-    //         .expect("Command section of current instruction couldn't be extracted");
-    //
-    //     match command {
-    //         "and" | "or" | "sub" | "eq" | "neg" | "gt" | "lt" | "not" | "add" => {
-    //             CommandType::C_ARITHMETIC("")
-    //         }
-    //         // "push" => CommandType::C_PUSH(ArgumentPair {
-    //         //     first: command_list
-    //         //         .next()
-    //         //         .expect("First argument of push is expected!"),
-    //         //     second: command_list
-    //         //         .next()
-    //         //         .expect("Second argument of push is expected!")
-    //         //         .parse()
-    //         //         .unwrap(),
-    //         // }),
-    //         // "pop" => CommandType::C_POP(ArgumentPair {
-    //         //     first: command_list
-    //         //         .next()
-    //         //         .expect("First argument of pop is expected!"),
-    //         //     second: command_list
-    //         //         .next()
-    //         //         .expect("Second argument of pop is expected!")
-    //         //         .parse()
-    //         //         .unwrap(),
-    //         // }),
-    //         _ => panic!("Couldn't decipher instruction type"),
-    //     }
-    // }
-    //
-    // /// Returns first argument of current command
-    // /// # Panics
-    // /// Dont call for C_RETURN type
-    // // pub fn arg1(&self) -> &str {
-    // //     match self.command_type() {
-    // //         CommandType::C_RETURN => panic!("Arg 1 can't be called with RETURN type"),
-    // //         CommandType::C_ARITHMETIC(command) => command,
-    // //         CommandType::C_PUSH(argument_pair) => argument_pair.first,
-    // //         _ => "",
-    // //     }
-    // // }
-    //
-    // /// Returns second argument of current command
-    // /// # Panics
-    // /// Only call if current command type
-    // /// is C_PUSH, C_CALL, C_POP, C_FUNCTION
-    // pub fn arg2(self) -> u128 {
-    //     match self.command_type() {
-    //         CommandType::C_PUSH(argument_pair) | CommandType::C_POP(argument_pair) => {
-    //             argument_pair.second
-    //         }
-    //         _ => panic!("Only call for C_PUSH, C_POP, C_CALL, C_FUNCTION commandType"),
-    //     }
-    // }
+    /// # Panics
+    /// if command type can't be deciphered
+    pub fn command_type(&self) -> CommandType {
+        let mut command_list = self.current_command.split_ascii_whitespace();
+        let command = command_list
+            .next()
+            .expect("Command section of current instruction couldn't be extracted");
+
+        match command {
+            "and" | "or" | "sub" | "eq" | "neg" | "gt" | "lt" | "not" | "add" => {
+                CommandType::C_ARITHMETIC(command.to_string())
+            }
+            "push" => CommandType::C_PUSH(ArgumentPair {
+                first: command_list
+                    .next()
+                    .expect("First argument of push is expected!")
+                    .to_owned(),
+                second: command_list
+                    .next()
+                    .expect("Second argument of push is expected!")
+                    .parse()
+                    .unwrap(),
+            }),
+            "pop" => CommandType::C_POP(ArgumentPair {
+                first: command_list
+                    .next()
+                    .expect("First argument of pop is expected!")
+                    .to_string(),
+                second: command_list
+                    .next()
+                    .expect("Second argument of pop is expected!")
+                    .parse()
+                    .unwrap(),
+            }),
+            _ => panic!("Couldn't decipher instruction type"),
+        }
+    }
+
+    /// Returns first argument of current command
+    /// # Panics
+    /// Dont call for C_RETURN type
+    pub fn arg1(&self) -> String {
+        match self.command_type() {
+            CommandType::C_RETURN => panic!("Arg 1 can't be called with RETURN type"),
+            CommandType::C_ARITHMETIC(command) => command.to_lowercase(),
+            CommandType::C_PUSH(argument_pair) => argument_pair.first.to_lowercase(),
+            CommandType::C_POP(argument_pair) => argument_pair.first.to_lowercase(),
+            _ => "".to_owned(),
+        }
+    }
+
+    /// Returns second argument of current command
+    /// # Panics
+    /// Only call if current command type
+    /// is C_PUSH, C_CALL, C_POP, C_FUNCTION
+    pub fn arg2(&self) -> u128 {
+        match self.command_type() {
+            CommandType::C_PUSH(argument_pair) | CommandType::C_POP(argument_pair) => {
+                argument_pair.second
+            }
+            _ => panic!("Only call for C_PUSH, C_POP, C_CALL, C_FUNCTION commandType"),
+        }
+    }
 }
 
 #[cfg(test)]
