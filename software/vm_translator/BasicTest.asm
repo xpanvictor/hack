@@ -143,8 +143,58 @@ A=M
 M=D
 @SP
 M=M+1
+// ----: not ----
+// Arithmetic-logic 
+@SP
+A=M-1
+D=M
+@SP
+M=M-1
+@R13
+A=M+0
+M=D
+// ($not)
+@R15
+M=!D
+@R15
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
 // ----: add ----
-add
+// Arithmetic-logic 
+@SP
+A=M-1
+D=M
+@SP
+M=M-1
+@R13
+A=M+0
+M=D
+@SP
+A=M-1
+D=M
+@SP
+M=M-1
+@R14
+A=M+0
+M=D
+// ($add)
+@R13
+D=M
+@R14
+D=D+M
+@R15
+M=D
+@R15
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
 // ----: push argument 1 ----
 @ARG
 A=M+1
@@ -155,7 +205,37 @@ M=D
 @SP
 M=M+1
 // ----: sub ----
-sub
+// Arithmetic-logic 
+@SP
+A=M-1
+D=M
+@SP
+M=M-1
+@R13
+A=M+0
+M=D
+@SP
+A=M-1
+D=M
+@SP
+M=M-1
+@R14
+A=M+0
+M=D
+// ($sub)
+@R13
+D=M
+@R14
+D=D-M
+@R15
+M=D
+@R15
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
 // ----: push this 6 ----
 @THIS
 A=M+6
@@ -175,13 +255,73 @@ M=D
 @SP
 M=M+1
 // ----: add ----
-add
+// Arithmetic-logic 
+@SP
+A=M-1
+D=M
+@SP
+M=M-1
+@R13
+A=M+0
+M=D
+@SP
+A=M-1
+D=M
+@SP
+M=M-1
+@R14
+A=M+0
+M=D
+// ($add)
+@R13
+D=M
+@R14
+D=D+M
+@R15
+M=D
+@R15
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
 // ----: sub ----
-sub
+// Arithmetic-logic 
+@SP
+A=M-1
+D=M
+@SP
+M=M-1
+@R13
+A=M+0
+M=D
+@SP
+A=M-1
+D=M
+@SP
+M=M-1
+@R14
+A=M+0
+M=D
+// ($sub)
+@R13
+D=M
+@R14
+D=D-M
+@R15
+M=D
+@R15
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
 // ----: push temp 6 ----
 @11
 D=M
-@SP
+/@SP
 A=M
 M=D
 @SP

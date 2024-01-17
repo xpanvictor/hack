@@ -2,12 +2,14 @@ use std::{fs};
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
+#[derive(Clone)]
 pub struct ArgumentPair {
-    first: String,
-    second: u128,
+    pub(crate) first: String,
+    pub(crate) second: u128,
 }
 
 #[allow(non_camel_case_types)]
+#[derive(Clone)]
 pub enum CommandType {
     C_ARITHMETIC(String),
     C_PUSH(ArgumentPair),

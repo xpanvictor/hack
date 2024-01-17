@@ -27,7 +27,7 @@ pub fn vm_translator(mut args: impl Iterator<Item = String>) {
             ),
             CommandType::C_ARITHMETIC(_) => code_writer.write_arithmetic(
                 Some(parser.current_command.as_str()),
-                parser.arg1().as_str()
+                parser.command_type()
             ),
             _ => ()
         };

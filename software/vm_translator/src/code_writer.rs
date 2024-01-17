@@ -1,7 +1,7 @@
 use std::{fs::File, io::Write, path};
 use std::fmt::format;
 use phf;
-use crate::parser::CommandType;
+use crate::parser::{ArgumentPair, CommandType};
 
 // OpenOptions::new()
 //             .append(true)
@@ -18,6 +18,9 @@ pub struct CodeWriter {
 /// Standard constants
 const PUSH_STR: &str = "@SP\nA=M\nM=D\n@SP\nM=M+1";
 const BASE_TEMP_SEGMENT: u128 = 5;
+const POP_A: &str = "R13";
+const POP_B: &str = "R14";
+const PUSH_A: &str = "R15";
 
 
 static POINTER_MAPPINGS: phf::Map<&'static str, &'static str> = phf::phf_map! {
@@ -57,8 +60,59 @@ impl CodeWriter {
 
     // fn generate_pop(bp: &str, index: u128) -> String {}
 
-    pub fn write_arithmetic(&mut self, raw_command: Option<&str>, command: &str) {
-        self.write_to_file(command, raw_command);
+    pub fn write_arithmetic(&mut self, raw_command: Option<&str>, command_type: CommandType) {
+        self.write_to_file("// Arithmetic-logic ", raw_command);
+        // pop A to R13
+        self.write_push_pop(
+            None,
+            CommandType::C_POP(ArgumentPair{first: POP_A.to_string(), second: 0 }),
+            POP_A,
+            0
+        );
+        match command_type.clone() {
+            CommandType::C_ARITHMETIC(command) => {
+                let arith_logic_statement = match command.as_str() {
+                    "not" | "neg" => {
+                        // Write R15
+                        format!("// (${})\n@R15\nM={}D", command.as_str(), if command.as_str() == "not" {"!"} else {"-"})
+                    },
+                    arithmetic_instr => {
+                        // pop B to R14
+                        self.write_push_pop(
+                            None,
+                            CommandType::C_POP(ArgumentPair{first: POP_B.to_string(), second: 0 }),
+                            POP_B,
+                            0
+                        );
+                        format!(
+                            "// (${})\n@{}\nD=M\n@{}\nD=D{}M\n@{}\nM=D",
+                            arithmetic_instr,
+                            POP_A, POP_B,
+                            // operator
+                            match arithmetic_instr {
+                                "add" => "+",
+                                "sub" => "-",
+                                "and" => "&",
+                                "or" => "|",
+                                _ => "--**-- Error: not included"
+                            },
+                            PUSH_A,
+                        )
+                    },
+                    _ => "".to_string()
+                };
+                self.write_to_file(arith_logic_statement.as_str(), None);
+            }
+            _ => panic!("Cannot perform arith-logic on non-arith-logic instruction")
+        };
+
+        // push to A
+        self.write_push_pop(
+            None,
+            CommandType::C_PUSH(ArgumentPair{first: PUSH_A.to_string(), second: 0 }),
+            PUSH_A,
+            0
+        );
     }
 
     /// Writes push-pop instruction
@@ -84,9 +138,9 @@ impl CodeWriter {
                         format!("@{index}\nD=A\n{PUSH_STR}")
                     }
                     "temp" => {
-                        format!("@{}\nD=M\n{PUSH_STR}", BASE_TEMP_SEGMENT + index)
+                        format!("@{}\nD=M\n/{PUSH_STR}", BASE_TEMP_SEGMENT + index)
                     }
-                    strange_pointer => format!("--**-- Error: {strange_pointer}")
+                    _ => format!("@{segment}\nD=M\n{PUSH_STR}")
                 };
             }
             CommandType::C_POP(_) => {
