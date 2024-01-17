@@ -130,4 +130,10 @@ add
 // ----: sub ----
 sub
 // ----: push temp 6 ----
---**-- Error
+@11
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1

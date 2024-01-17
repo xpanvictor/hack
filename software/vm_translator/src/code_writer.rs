@@ -13,6 +13,7 @@ pub struct CodeWriter {
 }
 
 const PUSH_STR: &str = "@SP\nA=M\nM=D\n@SP\nM=M+1";
+const BASE_TEMP_SEGMENT: u128 = 5;
 
 impl CodeWriter {
     pub fn new(output_file: &str) -> CodeWriter {
@@ -56,15 +57,19 @@ impl CodeWriter {
         match command {
             CommandType::C_PUSH(_) => {
                 translation = match segment {
-                    base_pointer if matches!(base_pointer, "local" | "argument" | "this" | "that") =>
+                    base_pointer
+                        if matches!(base_pointer, "local" | "argument" | "this" | "that") =>
                         Self::generate_push(base_pointer, index),
                     "pointer" => {
-                        format!("{}\nD=M\n{PUSH_STR}", if index == 0 { "@THIS" } else { "@THAT" })
-                    }
+                        format!("@{}\nD=M\n{PUSH_STR}", if index == 0 { "THIS" } else { "THAT" })
+                    },
                     "constant" => {
                         format!("@{index}\nD=A\n{PUSH_STR}")
-                    }
-                    _ => "--**-- Error".to_string()
+                    },
+                    "temp" => {
+                        format!("@{}\nD=M\n{PUSH_STR}", BASE_TEMP_SEGMENT+index)
+                    },
+                    strange_pointer => format!("--**-- Error: {strange_pointer}")
                 };
             }
             CommandType::C_POP(_) => (),
