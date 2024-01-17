@@ -29,8 +29,14 @@ impl CodeWriter {
     }
 
     fn generate_push(bp: &str, index: u128) -> String {
-        // match bp { &val => {} }
-        format!("@{bp}\nA=M+{index}\nD=M\n{PUSH_STR}")
+        let base_pointer = match bp {
+            "local" => "LCL",
+            "argument" => "ARG",
+            "this" => "THIS",
+            "that" => "THAT",
+            _ => "--*-- Error"
+        };
+        format!("@{base_pointer}\nA=M+{index}\nD=M\n{PUSH_STR}")
     }
 
     pub fn write_arithmetic(&mut self, raw_command: Option<&str>, command: &str) {
@@ -50,19 +56,15 @@ impl CodeWriter {
         match command {
             CommandType::C_PUSH(_) => {
                 translation = match segment {
-                    "ski" => Self::generate_push("", index),
-                    "local" => Self::generate_push("LCL", index),
-                    "argument" => Self::generate_push("ARG", index),
-                    "this" => Self::generate_push("THIS", index),
-                    "that" => Self::generate_push("THAT", index),
-                    // todo: fix this above spaghetti code
+                    base_pointer if matches!(base_pointer, "local" | "argument" | "this" | "that") =>
+                        Self::generate_push(base_pointer, index),
                     "pointer" => {
                         format!("{}\nD=M\n{PUSH_STR}", if index == 0 { "@THIS" } else { "@THAT" })
                     }
                     "constant" => {
                         format!("@{index}\nD=A\n{PUSH_STR}")
                     }
-                    _ => "".to_string()
+                    _ => "--**-- Error".to_string()
                 };
             }
             CommandType::C_POP(_) => (),

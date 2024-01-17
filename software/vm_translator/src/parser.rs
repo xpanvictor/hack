@@ -51,8 +51,8 @@ impl<> Parser {
         if line.contains("//") {
             line = line.split_once("//").unwrap().0;
             line = line.trim();
-        }
-        return line.to_string();
+        };
+        line.to_string()
     }
 
     pub fn has_more_lines(&mut self) -> bool {
