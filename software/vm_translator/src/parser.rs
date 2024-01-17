@@ -25,28 +25,6 @@ pub struct Parser {
     pub current_command: String,
 }
 
-/*
-impl<'a> IntoIterator for &'a Parser<'a> {
-type Item = &'a str;
-type IntoIter = ParserIterator<'a>;
-
-fn into_iter(self) -> Self::IntoIter {
-todo!()
-}
-}
-
-struct ParserIterator<'a> {
-commands_total: &'a Parser<'a>
-}
-
-impl<'a> Iterator for ParserIterator<'a> {
-type Item = &'a str;
-
-fn next(&mut self) -> Option<Self::Item> {
-return self.commands_total.vm_source_code.lines().
-}
-}
-*/
 
 impl<> Parser {
     pub fn new(filepath: &str) -> Parser {

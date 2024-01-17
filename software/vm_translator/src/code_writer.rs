@@ -1,4 +1,3 @@
-// use std::fs;
 use std::{fs::File, io::Write, path};
 use crate::parser::CommandType;
 
@@ -13,11 +12,13 @@ pub struct CodeWriter {
     output_file_path: path::PathBuf,
 }
 
+const PUSH_STR: &str = "@SP\nA=M\nM=D\n@SP\nM=M+1";
+
 impl CodeWriter {
     pub fn new(output_file: &str) -> CodeWriter {
         CodeWriter {
             translated_assembly_file_handle: File::create(output_file)
-                .expect(&format!("Couldn't write to {}!", output_file)),
+                .unwrap_or_else(|_| panic!("Couldn't write to {}!", output_file)),
             output_file_path: path::Path::new(output_file).to_path_buf(),
         }
     }
@@ -28,7 +29,8 @@ impl CodeWriter {
     }
 
     fn generate_push(bp: &str, index: u128) -> String {
-        format!("@{bp}\nA=M+{index}\nD=M\n@SP\nA=M\nM=D@SP\nM=M+1")
+        // match bp { &val => {} }
+        format!("@{bp}\nA=M+{index}\nD=M\n{PUSH_STR}")
     }
 
     pub fn write_arithmetic(&mut self, raw_command: Option<&str>, command: &str) {
@@ -38,19 +40,31 @@ impl CodeWriter {
     /// Writes push-pop instruction
     /// # Panics
     /// Don't call if CommandType isn't C_PUSH or C_POP
-    pub fn write_push_pop(&mut self, raw_command: Option<&str>, command: CommandType, segment: &str, index: u128) {
+    pub fn write_push_pop(
+        &mut self,
+        raw_command: Option<&str>,
+        command: CommandType, segment: &str,
+        index: u128,
+    ) {
         let mut translation = String::new();
         match command {
             CommandType::C_PUSH(_) => {
-                translation = {
-                    let bp = match segment {
-                        "local" => "LCL",
-                        "argument" => "ARG",
-                        _ => ""
-                    };
-                    Self::generate_push(bp, index)
+                translation = match segment {
+                    "ski" => Self::generate_push("", index),
+                    "local" => Self::generate_push("LCL", index),
+                    "argument" => Self::generate_push("ARG", index),
+                    "this" => Self::generate_push("THIS", index),
+                    "that" => Self::generate_push("THAT", index),
+                    // todo: fix this above spaghetti code
+                    "pointer" => {
+                        format!("{}\nD=M\n{PUSH_STR}", if index == 0 { "@THIS" } else { "@THAT" })
+                    }
+                    "constant" => {
+                        format!("@{index}\nD=A\n{PUSH_STR}")
+                    }
+                    _ => "".to_string()
                 };
-            },
+            }
             CommandType::C_POP(_) => (),
             _ => panic!("Can't push/pop if instruction isn't a push/pop instruction")
         };
