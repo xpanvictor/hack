@@ -1,4 +1,6 @@
 use std::{fs::File, io::Write, path};
+use std::fmt::format;
+use phf;
 use crate::parser::CommandType;
 
 // OpenOptions::new()
@@ -12,8 +14,26 @@ pub struct CodeWriter {
     output_file_path: path::PathBuf,
 }
 
+
+/// Standard constants
 const PUSH_STR: &str = "@SP\nA=M\nM=D\n@SP\nM=M+1";
 const BASE_TEMP_SEGMENT: u128 = 5;
+
+
+static POINTER_MAPPINGS: phf::Map<&'static str, &'static str> = phf::phf_map! {
+    "local" => "LCL",
+    "argument" => "ARG",
+    "this" => "THIS",
+    "that" => "THAT"
+};
+
+fn get_pointer_mapping(raw_kw: &str) -> Result<&&str, &str> {
+    POINTER_MAPPINGS.get(raw_kw).ok_or("Not found")
+}
+
+// fn get_pointer_keywords() -> Keys<&'static str, &'static str> {
+//     POINTER_MAPPINGS.keys()
+// }
 
 impl CodeWriter {
     pub fn new(output_file: &str) -> CodeWriter {
@@ -30,15 +50,12 @@ impl CodeWriter {
     }
 
     fn generate_push(bp: &str, index: u128) -> String {
-        let base_pointer = match bp {
-            "local" => "LCL",
-            "argument" => "ARG",
-            "this" => "THIS",
-            "that" => "THAT",
-            _ => "--*-- Error"
-        };
+        let base_pointer = get_pointer_mapping(bp)
+            .unwrap_or(&"--**-- Error");
         format!("@{base_pointer}\nA=M+{index}\nD=M\n{PUSH_STR}")
     }
+
+    // fn generate_pop(bp: &str, index: u128) -> String {}
 
     pub fn write_arithmetic(&mut self, raw_command: Option<&str>, command: &str) {
         self.write_to_file(command, raw_command);
@@ -58,21 +75,23 @@ impl CodeWriter {
             CommandType::C_PUSH(_) => {
                 translation = match segment {
                     base_pointer
-                        if matches!(base_pointer, "local" | "argument" | "this" | "that") =>
+                    if matches!(base_pointer, "local" | "argument" | "this" | "that") =>
                         Self::generate_push(base_pointer, index),
                     "pointer" => {
                         format!("@{}\nD=M\n{PUSH_STR}", if index == 0 { "THIS" } else { "THAT" })
-                    },
+                    }
                     "constant" => {
                         format!("@{index}\nD=A\n{PUSH_STR}")
-                    },
+                    }
                     "temp" => {
-                        format!("@{}\nD=M\n{PUSH_STR}", BASE_TEMP_SEGMENT+index)
-                    },
+                        format!("@{}\nD=M\n{PUSH_STR}", BASE_TEMP_SEGMENT + index)
+                    }
                     strange_pointer => format!("--**-- Error: {strange_pointer}")
                 };
             }
-            CommandType::C_POP(_) => (),
+            CommandType::C_POP(_) => {
+                translation = format!("@SP\nA=M-1\nD=M\n@SP\nM=M-1\n@{}\nA=M+{}\nM=D", segment, index)
+            }
             _ => panic!("Can't push/pop if instruction isn't a push/pop instruction")
         };
         self.write_to_file(translation.as_str(), raw_command);
