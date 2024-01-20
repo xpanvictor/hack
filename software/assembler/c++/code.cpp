@@ -60,7 +60,7 @@ namespace CodeModule
         auto itrCompCode = TCompCodes.find(compCode);
         if (itrCompCode == TCompCodes.end())
         {
-            throw "Assembly code not found";
+            throw std::invalid_argument("Assembly code not found");
         }
         else
             res += itrCompCode->second;

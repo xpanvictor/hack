@@ -50,6 +50,7 @@ Parser::Parser(const char *filepath)
             return;
         }
     }
+    
     catch (const exception &e)
     {
         std::cerr << "<--Error: " << e.what() << '\n';
@@ -113,39 +114,40 @@ void Parser::resetParser(ECurrentPhase new_phase)
     cout << "Current phase: " << current_phase << endl;
 }
 
-void Parser::advance(void)
+bool Parser::isValidLine() const {
+    bool isComment = current_line.find("//") == 0;
+    bool isWhiteSpace = current_line.find_first_not_of(" \t\n\r") > 0;
+    return !(isComment || isWhiteSpace);
+}
+
+void Parser::advance()
 {
-    while (hasMoreLines())
-    {
-        int endPos = assembly_content.find('\n', current_pos);
-        if (endPos == std::string::npos)
-            endPos = assembly_content.length();
 
-        // Ignore whitespace and comment
-        string rawLine = assembly_content.substr(current_pos, endPos - current_pos);
-        current_line = stripNonCode(rawLine);
-        // cout << current_line << endl;
-        line_counter++;
+    int endPos = assembly_content.find('\n', current_pos);
+    if (endPos == std::string::npos)
+        endPos = assembly_content.length();
 
-        bool isComment = current_line.find("//") == 0;
-        bool isWhiteSpace = current_line.find_first_not_of(" \t\n\r") > 0;
+    // Ignore whitespace and comment
+    string rawLine = assembly_content.substr(current_pos, endPos - current_pos);
+    current_line = stripNonCode(rawLine);
+    // cout << current_line << endl;
+    line_counter++;
 
-        // change current position
-        current_pos = endPos + 1;
-        if (isComment || isWhiteSpace)
-            continue;
+    // change current position
+    current_pos = endPos + 1;
 
-        break;
+    if (hasMoreLines() && !this->isValidLine()) {
+        this->advance();
     }
 }
 
 EInstructionType Parser::instructionType(void)
 {
-    if (current_line.find("@") != string::npos)
+    if (current_line.find('@') != string::npos)
     {
         return A_INSTRUCTION;
     }
-    else if (current_line.find("(") != string::npos)
+    else if (current_line.find('(') != string::npos)
     {
         return L_INSTRUCTION;
     }
@@ -176,7 +178,7 @@ string Parser::dest(void)
     return current_line.substr(0, eq_sign_pos);
 }
 
-string Parser::comp(void)
+string Parser::comp()
 {
     if (instructionType() != C_INSTRUCTION)
         throw std::invalid_argument("can't get comp of an A Instruction");

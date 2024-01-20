@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
                 !isSymbolInteger &&
                 assembly_parser.symbol_table.find(curr_symbol) == assembly_parser.symbol_table.end())
             {
-                // TODO: Segfault finding space in hashtable
+                // todo: Segfault finding space in hashtable
                 // symbol doesn't exist, addEntry
                 assembly_parser.symbol_table.insert(make_pair(curr_symbol, current_free_pos));
                 current_free_pos++;
@@ -50,8 +50,12 @@ int main(int argc, char *argv[])
     while (assembly_parser.hasMoreLines())
     {
         string assembly_binary_code;
-        // cout << "Stepping: " << assembly_parser.instructionType() << endl;
         assembly_parser.advance();
+        // check for the last line whitespace scenario
+        if (!assembly_parser.isValidLine()) {
+            assembly_parser.advance();
+            continue;
+        }
         if (assembly_parser.instructionType() < 2)
         {
             string curr_symbol = assembly_parser.symbol();
@@ -63,7 +67,7 @@ int main(int argc, char *argv[])
                 if (itrSymbolValue == assembly_parser.symbol_table.end())
                 {
                     cerr << "Symbol not found in symbol table!" << endl;
-                    throw "Symbol not found";
+                    throw std::domain_error("Symbol not found");
                 }
                 iCurr_symbol = itrSymbolValue->second;
             }
@@ -77,10 +81,12 @@ int main(int argc, char *argv[])
         else
         {
             string CINCODE = "111";
+//            cout << "Stepping: " << assembly_parser.comp() << endl;
             string compCode = CodeModule::comp(assembly_parser.comp());
             string destCode = CodeModule::dest(assembly_parser.dest());
             string jumpCode = CodeModule::jump(assembly_parser.jump());
 
+            // todo: use append instead of concatenating
             assembly_binary_code = CINCODE + compCode + destCode + jumpCode;
         }
         assembly_parser.writeBinaryLine(assembly_binary_code);

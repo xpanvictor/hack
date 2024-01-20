@@ -36,7 +36,7 @@ private:
     int current_pos = 0;
 
 public:
-    Parser(const char *filepath);
+    explicit Parser(const char *filepath);
     ~Parser(void);
 
     unordered_map<string, int> symbol_table;
@@ -51,6 +51,7 @@ public:
     int first_pass(void); // -1 for failure
 
     bool hasMoreLines(void);
+    bool isValidLine() const;
     /**
      * Steps through whitespaces and comments
      * Note: Only called when hasMoreLines() is true
