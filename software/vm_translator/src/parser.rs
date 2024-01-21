@@ -31,7 +31,7 @@ pub struct Parser {
 impl<> Parser {
     pub fn new(filepath: &str) -> Parser {
         println!("Reading vm file: {}", filepath);
-        let mut parser = Parser {
+        Parser {
             vm_source_code: Box::new(
                 fs::read_to_string(filepath)
                     .expect("Couldn't read the source code")
@@ -42,9 +42,7 @@ impl<> Parser {
                     .peekable()
             ),
             current_command: "".to_owned()
-        };
-        parser.advance();
-        parser
+        }
     }
 
     /// Just strips out whitespace and comments
@@ -57,9 +55,7 @@ impl<> Parser {
         line.to_string()
     }
 
-    pub fn has_more_lines(&mut self) -> bool {
-        self.vm_source_code.peek().is_some()
-    }
+    pub fn has_more_lines(&mut self) -> bool { self.vm_source_code.peek().is_some() }
 
 
     /// # Panics
