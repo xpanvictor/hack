@@ -1,4 +1,4 @@
-use std::{fs};
+use std::fs;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
@@ -27,8 +27,7 @@ pub struct Parser {
     pub current_command: String,
 }
 
-
-impl<> Parser {
+impl Parser {
     pub fn new(filepath: &str) -> Parser {
         println!("Reading vm file: {}", filepath);
         Parser {
@@ -39,9 +38,9 @@ impl<> Parser {
                     .map(|x| x.to_string())
                     .collect::<Vec<String>>()
                     .into_iter()
-                    .peekable()
+                    .peekable(),
             ),
-            current_command: "".to_owned()
+            current_command: "".to_owned(),
         }
     }
 
@@ -55,14 +54,15 @@ impl<> Parser {
         line.to_string()
     }
 
-    pub fn has_more_lines(&mut self) -> bool { self.vm_source_code.peek().is_some() }
-
+    pub fn has_more_lines(&mut self) -> bool {
+        self.vm_source_code.peek().is_some()
+    }
 
     /// # Panics
     /// Should be called only if has_more_lines() returns true
     pub fn advance(&mut self) {
         if !self.has_more_lines() {
-            panic!("Can't advance since no more vm code to interpret.")
+            panic!("Can't advance since no more vm code to interprete.")
         };
 
         self.current_command = Self::clean_line(self.vm_source_code.next().unwrap());

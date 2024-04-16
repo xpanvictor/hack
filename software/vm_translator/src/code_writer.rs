@@ -1,8 +1,6 @@
-use std::{fs::File, io::Write, path};
+use crate::constants::{get_pointer_mapping, BASE_TEMP_SEGMENT, POP_A, POP_B, PUSH_A, PUSH_STR};
 use crate::parser::{ArgumentPair, CommandType};
-use crate::constants::{
-    get_pointer_mapping, BASE_TEMP_SEGMENT, PUSH_A, POP_A, POP_B, PUSH_STR
-};
+use std::{fs::File, io::Write, path};
 
 // OpenOptions::new()
 //             .append(true)
@@ -13,8 +11,10 @@ use crate::constants::{
 pub struct CodeWriter {
     translated_assembly_file_handle: File,
     output_file_path: path::PathBuf,
+    // pointer to note depth of jump statement
+    // NOTE: Never read directly, use helper function `generate_depth`
+    jump_depth: usize,
 }
-
 
 // fn get_pointer_keywords() -> Keys<&'static str, &'static str> {
 //     POINTER_MAPPINGS.keys()
@@ -26,12 +26,19 @@ impl CodeWriter {
             translated_assembly_file_handle: File::create(output_file)
                 .unwrap_or_else(|_| panic!("Couldn't write to {}!", output_file)),
             output_file_path: path::Path::new(output_file).to_path_buf(),
+            jump_depth: 0,
         }
     }
 
     /// Helper functions
     fn generate_comment(command: &str) -> String {
         format!("// ----: {} ----\n", command)
+    }
+
+    // helper function to generate new depth
+    fn generate_depth(&mut self) -> usize {
+        self.jump_depth += 1;
+        self.jump_depth
     }
 
     // fn generate_extend_base(bp: &str, index: u128) -> String {
@@ -43,9 +50,11 @@ impl CodeWriter {
     }
 
     fn generate_push(bp: &str, index: u128) -> String {
-        let base_pointer = get_pointer_mapping(bp)
-            .unwrap_or(&"--**-- Error");
-        format!("{}\nD=M\n{PUSH_STR}", Self::generate_extend_address(base_pointer, index))
+        let base_pointer = get_pointer_mapping(bp).unwrap_or(&"--**-- Error");
+        format!(
+            "{}\nD=M\n{PUSH_STR}",
+            Self::generate_extend_address(base_pointer, index)
+        )
     }
 
     /// Writes write-arithmetic instruction
@@ -56,7 +65,10 @@ impl CodeWriter {
         // pop A to R13
         self.write_push_pop(
             None,
-            CommandType::C_POP(ArgumentPair { first: POP_A.to_string(), second: 0 }),
+            CommandType::C_POP(ArgumentPair {
+                first: POP_A.to_string(),
+                second: 0,
+            }),
             POP_A,
             0,
         );
@@ -65,35 +77,51 @@ impl CodeWriter {
                 let arith_logic_statement = match command.as_str() {
                     "not" | "neg" => {
                         // Write R15
-                        format!("// (${})\n@R15\nM={}D", command.as_str(), if command.as_str() == "not" { "!" } else { "-" })
+                        format!(
+                            "// (${})\n@R15\nM={}D",
+                            command.as_str(),
+                            if command.as_str() == "not" { "!" } else { "-" }
+                        )
                     }
                     "lt" | "gt" | "eq" => {
+                        let instance_depth = self.generate_depth();
                         format!(
-                            "// (${})\n@{}\nD=M\n@{}\nD=D-M\n@(TRUE)\nD;J{}\n@R15\nM=0\n(TRUE)\n@R15\nM=-1",
+                            "
+                                // ($--logic-section)\n@{}\nD=M\n@SP\nA=M-1\nD=M-D\n@SP\nM=M-1
+                                //(${})\n@TRUE_{instance_depth}\nD;J{}\n@{}\nM=0\n@CONTINUE_{}\n0;JMP\n(TRUE_{instance_depth})\n@{}\nM=-1\n(CONTINUE_{})
+                            ",
+                            POP_A,
                             command.as_str(),
-                            POP_A, POP_B,
-                            command.as_str().to_uppercase()
+                            command.as_str().to_uppercase(),
+                            PUSH_A,
+                            instance_depth,
+                            PUSH_A,
+                            instance_depth
                         )
                     }
                     arithmetic_instr => {
                         // pop B to R14
                         self.write_push_pop(
                             None,
-                            CommandType::C_POP(ArgumentPair { first: POP_B.to_string(), second: 0 }),
+                            CommandType::C_POP(ArgumentPair {
+                                first: POP_B.to_string(),
+                                second: 0,
+                            }),
                             POP_B,
                             0,
                         );
                         format!(
-                            "// (${})\n@{}\nD=M\n@{}\nD=D{}M\n@{}\nM=D",
+                            "// (${})\n@{}\nD=M\n@{}\nD=M{}D\n@{}\nM=D",
                             arithmetic_instr,
-                            POP_A, POP_B,
+                            POP_A,
+                            POP_B,
                             // operator; todo: use constants instead
                             match arithmetic_instr {
                                 "add" => "+",
                                 "sub" => "-",
                                 "and" => "&",
                                 "or" => "|",
-                                _ => panic!("{}: Code not found", arithmetic_instr)
+                                _ => panic!("{}: Code not found", arithmetic_instr),
                             },
                             PUSH_A,
                         )
@@ -101,13 +129,16 @@ impl CodeWriter {
                 };
                 self.write_to_file(arith_logic_statement.as_str(), None);
             }
-            _ => panic!("Cannot perform arith-logic on non-arith-logic instruction")
+            _ => panic!("Cannot perform arith-logic on non-arith-logic instruction"),
         };
 
         // push to A
         self.write_push_pop(
             None,
-            CommandType::C_PUSH(ArgumentPair { first: PUSH_A.to_string(), second: 0 }),
+            CommandType::C_PUSH(ArgumentPair {
+                first: PUSH_A.to_string(),
+                second: 0,
+            }),
             PUSH_A,
             0,
         );
@@ -119,48 +150,56 @@ impl CodeWriter {
     pub fn write_push_pop(
         &mut self,
         raw_command: Option<&str>,
-        command: CommandType, segment: &str,
+        command: CommandType,
+        segment: &str,
         index: u128,
     ) {
         let translation = match command {
-            CommandType::C_PUSH(_) => {
-                match segment {
-                    base_pointer
-                    if matches!(base_pointer, "local" | "argument" | "this" | "that") =>
-                        Self::generate_push(base_pointer, index),
-                    "pointer" => {
-                        format!("@{}\nD=M\n{PUSH_STR}", if index == 0 { "THIS" } else { "THAT" })
-                    }
-                    "constant" => {
-                        format!("@{index}\nD=A\n{PUSH_STR}")
-                    }
-                    "temp" => {
-                        format!("@{}\nD=M\n{PUSH_STR}", BASE_TEMP_SEGMENT + index)
-                    }
-                    _ => format!("@{segment}\nD=M\n{PUSH_STR}")
+            CommandType::C_PUSH(_) => match segment {
+                base_pointer if matches!(base_pointer, "local" | "argument" | "this" | "that") => {
+                    Self::generate_push(base_pointer, index)
                 }
-            }
+                "pointer" => {
+                    format!(
+                        "@{}\nD=M\n{PUSH_STR}",
+                        if index == 0 { "THIS" } else { "THAT" }
+                    )
+                }
+                "constant" => {
+                    format!("@{index}\nD=A\n{PUSH_STR}")
+                }
+                "temp" => {
+                    format!("@{}\nD=M\n{PUSH_STR}", BASE_TEMP_SEGMENT + index)
+                }
+                _ => format!("@{segment}\nD=M\n{PUSH_STR}"),
+            },
             CommandType::C_POP(_) => {
                 format!(
                     "@SP\nA=M-1\nD=M\n@SP\nM=M-1\n{}\nM=D",
                     match segment {
-                        "temp" => format!("@{}", (BASE_TEMP_SEGMENT + index)),
+                        "temp" => format!("@{}", BASE_TEMP_SEGMENT + index),
                         "R13" | "R14" | "R15" => format!("@{segment}"),
+                        "pointer" => format!("@{}", if index == 0 { "THIS" } else { "THAT" }),
                         _ => {
-                            let segment_keyword = get_pointer_mapping(segment).expect("Unrecognized segment");
+                            let segment_keyword =
+                                get_pointer_mapping(segment).expect("Unrecognized segment");
                             Self::generate_extend_address(segment_keyword, index).to_string()
                         }
                     }
                 )
             }
-            _ => panic!("Can't push/pop if instruction isn't a push/pop instruction")
+            _ => panic!("Can't push/pop if instruction isn't a push/pop instruction"),
         };
         self.write_to_file(translation.as_str(), raw_command);
     }
 
     fn write_to_file(&mut self, translation: &str, vm_command: Option<&str>) {
         let total_translation = if let Some(vm_command_str) = vm_command {
-            format!("{}{}\n", Self::generate_comment(vm_command_str), translation)
+            format!(
+                "{}{}\n",
+                Self::generate_comment(vm_command_str),
+                translation
+            )
         } else {
             format!("{}\n", translation)
         };
@@ -179,8 +218,9 @@ impl Drop for CodeWriter {
         // drop(self.translated_assembly_file_handle);
         println!(
             "Assembly file written to {:?}",
-            self.output_file_path.file_name()
+            self.output_file_path
+                .file_name()
+                .expect("Filename not found!")
         );
-        // todo!("Infinite loop code generation")
     }
 }
