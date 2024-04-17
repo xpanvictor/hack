@@ -35,6 +35,15 @@ impl CodeWriter {
         format!("// ----: {} ----\n", command)
     }
 
+    // static file handling
+    fn generate_static_mapper(&self, index: u128) -> String {
+        format!(
+            "{}.{}",
+            self.output_file_path.file_stem().unwrap().to_str().unwrap(),
+            index
+        )
+    }
+
     // helper function to generate new depth
     fn generate_depth(&mut self) -> usize {
         self.jump_depth += 1;
@@ -46,13 +55,17 @@ impl CodeWriter {
     // }
 
     fn generate_extend_address(bp: &str, index: u128) -> String {
-        format!("@{bp}\nD=M\n@{index}\nA=D+A")
+        format!("@{bp}\nD=M\n@{index}\nD=A+D")
+    }
+
+    fn generate_jump_address(bp: &str, index: u128) -> String {
+        format!("{}\n@R15\nM=D", Self::generate_extend_address(bp, index))
     }
 
     fn generate_push(bp: &str, index: u128) -> String {
         let base_pointer = get_pointer_mapping(bp).unwrap_or(&"--**-- Error");
         format!(
-            "{}\nD=M\n{PUSH_STR}",
+            "{}\nA=D\nD=M\n{PUSH_STR}",
             Self::generate_extend_address(base_pointer, index)
         )
     }
@@ -171,20 +184,28 @@ impl CodeWriter {
                 "temp" => {
                     format!("@{}\nD=M\n{PUSH_STR}", BASE_TEMP_SEGMENT + index)
                 }
+                "static" => {
+                    format!("@{}\nD=M\n{PUSH_STR}", self.generate_static_mapper(index))
+                }
                 _ => format!("@{segment}\nD=M\n{PUSH_STR}"),
             },
             CommandType::C_POP(_) => {
                 format!(
-                    "@SP\nA=M-1\nD=M\n@SP\nM=M-1\n{}\nM=D",
+                    "{}\n@SP\nM=M-1\nA=M\nD=M\n{}\nM=D",
+                    match segment {
+                        "temp" | "R13" | "R14" | "R15" | "pointer" | "static" => "".to_string(),
+                        _ => {
+                            let segment_keyword =
+                                get_pointer_mapping(segment).expect("Unrecognized segment");
+                            Self::generate_jump_address(segment_keyword, index)
+                        }
+                    },
                     match segment {
                         "temp" => format!("@{}", BASE_TEMP_SEGMENT + index),
                         "R13" | "R14" | "R15" => format!("@{segment}"),
                         "pointer" => format!("@{}", if index == 0 { "THIS" } else { "THAT" }),
-                        _ => {
-                            let segment_keyword =
-                                get_pointer_mapping(segment).expect("Unrecognized segment");
-                            Self::generate_extend_address(segment_keyword, index).to_string()
-                        }
+                        "static" => format!("@{}", self.generate_static_mapper(index)),
+                        _ => "@R15\nA=M".to_string(),
                     }
                 )
             }
