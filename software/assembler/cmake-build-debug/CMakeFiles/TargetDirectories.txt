@@ -1,0 +1,3 @@
+/home/xpan/Documents/nand2tetris/software/assembler/cmake-build-debug/CMakeFiles/assembler.dir
+/home/xpan/Documents/nand2tetris/software/assembler/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/xpan/Documents/nand2tetris/software/assembler/cmake-build-debug/CMakeFiles/rebuild_cache.dir
