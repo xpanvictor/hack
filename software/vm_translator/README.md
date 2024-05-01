@@ -9,6 +9,8 @@ Hack's assembly instruction.
 I have ensured the translator documents
 each processed command to make debugging easier.
 
+## Version 2: Stage 2 translator
+
 
 ## Usage
 ```bash
