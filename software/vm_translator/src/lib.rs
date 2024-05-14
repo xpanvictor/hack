@@ -3,17 +3,21 @@
 //! Does the job of translating using the other modules
 
 pub mod code_writer;
-pub mod parser;
 mod constants;
+pub mod parser;
+
+use std::path::Path;
 
 use code_writer::CodeWriter;
-use parser::{Parser, CommandType};
+use parser::{CommandType, Parser};
 
 pub fn vm_translator(mut args: impl Iterator<Item = String>) {
     args.next(); // Enter next value
 
     let filepath = args.next().expect("Filepath is required!");
     let output_filepath = format!("{}.asm", filepath.rsplit_once('.').unwrap().0);
+
+    let filepath = Path::new(&filepath);
 
     let mut code_writer = CodeWriter::new(&output_filepath);
     let mut parser = Parser::new(&filepath);
@@ -25,14 +29,11 @@ pub fn vm_translator(mut args: impl Iterator<Item = String>) {
                 Some(parser.current_command.as_str()),
                 parser.command_type(),
                 parser.arg1().as_str(),
-                parser.arg2()
+                parser.arg2(),
             ),
-            CommandType::C_ARITHMETIC(_) => code_writer.write_arithmetic(
-                Some(parser.current_command.as_str()),
-                parser.command_type()
-            ),
-            _ => ()
+            CommandType::C_ARITHMETIC(_) => code_writer
+                .write_arithmetic(Some(parser.current_command.as_str()), parser.command_type()),
+            _ => (),
         };
     }
-
 }

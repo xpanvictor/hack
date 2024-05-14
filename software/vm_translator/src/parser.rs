@@ -1,5 +1,6 @@
 use std::fs;
 use std::iter::Peekable;
+use std::path::Path;
 use std::vec::IntoIter;
 
 #[derive(Clone)]
@@ -28,8 +29,8 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(filepath: &str) -> Parser {
-        println!("Reading vm file: {}", filepath);
+    pub fn new(filepath: &Path) -> Parser {
+        println!("Reading vm file: {}", filepath.display());
         Parser {
             vm_source_code: Box::new(
                 fs::read_to_string(filepath)
