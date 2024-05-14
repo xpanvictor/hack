@@ -11,3 +11,4 @@ repository = "https://github.com/xpanvictor/hack/tree/master/software/vm_transla
 
 [dependencies]
 phf = { version = "0.11.2", features = ["macros"] }
+glob = { version = "0.3.1" }

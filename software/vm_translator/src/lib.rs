@@ -6,22 +6,13 @@ pub mod code_writer;
 mod constants;
 pub mod parser;
 
+use glob::glob;
 use std::path::Path;
 
 use code_writer::CodeWriter;
 use parser::{CommandType, Parser};
 
-pub fn vm_translator(mut args: impl Iterator<Item = String>) {
-    args.next(); // Enter next value
-
-    let filepath = args.next().expect("Filepath is required!");
-    let output_filepath = format!("{}.asm", filepath.rsplit_once('.').unwrap().0);
-
-    let filepath = Path::new(&filepath);
-
-    let mut code_writer = CodeWriter::new(&output_filepath);
-    let mut parser = Parser::new(&filepath);
-
+fn vm_functionality(parser: &mut Parser, code_writer: &mut CodeWriter) {
     while parser.has_more_lines() {
         parser.advance();
         match parser.command_type() {
@@ -35,5 +26,32 @@ pub fn vm_translator(mut args: impl Iterator<Item = String>) {
                 .write_arithmetic(Some(parser.current_command.as_str()), parser.command_type()),
             _ => (),
         };
+    }
+}
+
+pub fn vm_translator(mut args: impl Iterator<Item = String>) {
+    args.next(); // Enter next value
+
+    // TODO: refactor to support new structure of folder support
+    // - pass folder path and it generates a parser per .vm file in it
+    let filepath = args.next().expect("Filepath is required!");
+    let filepath = Path::new(&filepath);
+    let output_filepath = format!("{}.asm", filepath.file_stem().unwrap().to_str().unwrap());
+    let mut code_writer = CodeWriter::new(&output_filepath);
+
+    if filepath.is_dir() {
+        let file_pattern = filepath.join("**").join("*.vm");
+        for entry in glob(file_pattern.to_str().unwrap()).unwrap() {
+            match entry {
+                Ok(file_path) => {
+                    let mut parser = Parser::new(&file_path);
+                    vm_functionality(&mut parser, &mut code_writer);
+                }
+                Err(e) => println!("Invalid path dir provided {:?}", e),
+            }
+        }
+    } else {
+        let mut parser = Parser::new(filepath);
+        vm_functionality(&mut parser, &mut code_writer);
     }
 }
