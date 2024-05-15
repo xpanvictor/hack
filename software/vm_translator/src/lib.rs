@@ -32,8 +32,6 @@ fn vm_functionality(parser: &mut Parser, code_writer: &mut CodeWriter) {
 pub fn vm_translator(mut args: impl Iterator<Item = String>) {
     args.next(); // Enter next value
 
-    // TODO: refactor to support new structure of folder support
-    // - pass folder path and it generates a parser per .vm file in it
     let filepath = args.next().expect("Filepath is required!");
     let filepath = Path::new(&filepath);
     let output_filepath = format!("{}.asm", filepath.file_stem().unwrap().to_str().unwrap());
