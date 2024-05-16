@@ -34,7 +34,13 @@ pub fn vm_translator(mut args: impl Iterator<Item = String>) {
 
     let filepath = args.next().expect("Filepath is required!");
     let filepath = Path::new(&filepath);
-    let output_filepath = format!("{}.asm", filepath.file_stem().unwrap().to_str().unwrap());
+    let output_filepath = if !filepath.is_dir() {
+        filepath.with_extension("asm")
+    } else {
+        filepath
+            .join(filepath.file_name().unwrap())
+            .with_extension(".asm")
+    };
     let mut code_writer = CodeWriter::new(&output_filepath);
 
     if filepath.is_dir() {

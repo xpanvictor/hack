@@ -108,7 +108,10 @@ impl Parser {
                     .parse()
                     .unwrap(),
             }),
-            _ => panic!("Couldn't decipher instruction type"),
+            _ => panic!(
+                "Couldn't decipher instruction type {}",
+                self.current_command
+            ),
         }
     }
 

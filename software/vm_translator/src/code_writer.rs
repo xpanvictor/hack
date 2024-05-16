@@ -1,5 +1,8 @@
-use crate::constants::{get_pointer_mapping, BASE_TEMP_SEGMENT, POP_A, POP_B, PUSH_A, PUSH_STR};
+use crate::constants::{
+    get_pointer_mapping, BASE_TEMP_SEGMENT, POP_A, POP_B, PUSH_A, PUSH_STR, SP_A, SP_AM, VM_COMMENT,
+};
 use crate::parser::{ArgumentPair, CommandType};
+use std::path::Path;
 use std::{fs::File, io::Write, path};
 
 // OpenOptions::new()
@@ -11,6 +14,8 @@ use std::{fs::File, io::Write, path};
 pub struct CodeWriter {
     translated_assembly_file_handle: File,
     output_file_path: path::PathBuf,
+    // shous currently parsing file
+    current_file_name: String,
     // pointer to note depth of jump statement
     // NOTE: Never read directly, use helper function `generate_depth`
     jump_depth: usize,
@@ -21,13 +26,22 @@ pub struct CodeWriter {
 // }
 
 impl CodeWriter {
-    pub fn new(output_file: &str) -> CodeWriter {
-        CodeWriter {
+    pub fn new(output_file: &Path) -> CodeWriter {
+        let mut code_writer = CodeWriter {
             translated_assembly_file_handle: File::create(output_file)
-                .unwrap_or_else(|_| panic!("Couldn't write to {}!", output_file)),
+                .unwrap_or_else(|_| panic!("Couldn't write to {:?}!", output_file)),
+            // NOTE: was necessary when I was using str for output_file
             output_file_path: path::Path::new(output_file).to_path_buf(),
+            current_file_name: output_file
+                .file_stem()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string(),
             jump_depth: 0,
-        }
+        };
+        code_writer.write_to_file(&Self::generate_bootstrap_code(), Some(VM_COMMENT));
+        code_writer
     }
 
     /// Helper functions
@@ -54,6 +68,7 @@ impl CodeWriter {
     //     format!("@{bp}\nD=A\n@{index}\nA=D+A")
     // }
 
+    // so extends an address by an index
     fn generate_extend_address(bp: &str, index: u128) -> String {
         format!("@{bp}\nD=M\n@{index}\nD=A+D")
     }
@@ -68,6 +83,16 @@ impl CodeWriter {
             "{}\nA=D\nD=M\n{PUSH_STR}",
             Self::generate_extend_address(base_pointer, index)
         )
+    }
+
+    // bootstrap code; SP=256;call Sys.init
+    fn generate_bootstrap_code() -> String {
+        format!("@{SP_AM}\nD=A\n{SP_A}\nM=D\n@Sys.init\n0;JMP\n")
+    }
+
+    pub fn set_file_name(&mut self, current_file_name: &str) {
+        self.current_file_name = String::from(current_file_name);
+        self.write_to_file("// ** New file init: {}", Some(VM_COMMENT));
     }
 
     /// Writes write-arithmetic instruction
