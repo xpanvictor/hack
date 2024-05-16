@@ -14,7 +14,7 @@ pub struct ArgumentPair {
 pub enum CommandType {
     C_ARITHMETIC(String),
     C_PUSH(ArgumentPair),
-    C_LABEL,
+    C_LABEL(String),
     C_POP(ArgumentPair),
     C_GOTO,
     C_IF,
@@ -108,6 +108,11 @@ impl Parser {
                     .parse()
                     .unwrap(),
             }),
+            "label" => CommandType::C_LABEL(String::from(
+                command_list
+                    .next()
+                    .expect("A label location: string required"),
+            )),
             _ => panic!(
                 "Couldn't decipher instruction type {}",
                 self.current_command
@@ -124,6 +129,7 @@ impl Parser {
             CommandType::C_ARITHMETIC(command) => command.to_lowercase(),
             CommandType::C_PUSH(argument_pair) => argument_pair.first.to_lowercase(),
             CommandType::C_POP(argument_pair) => argument_pair.first.to_lowercase(),
+            CommandType::C_LABEL(command) => command, // retain case for case sensitive language
             _ => "".to_owned(),
         }
     }

@@ -239,6 +239,13 @@ impl CodeWriter {
         self.write_to_file(translation.as_str(), raw_command);
     }
 
+    pub fn write_label(&mut self, label: &str) {
+        self.write_to_file(
+            format!("({label})").as_str(),
+            Some(format!("label: {label}").as_str()),
+        )
+    }
+
     fn write_to_file(&mut self, translation: &str, vm_command: Option<&str>) {
         let total_translation = if let Some(vm_command_str) = vm_command {
             format!(
