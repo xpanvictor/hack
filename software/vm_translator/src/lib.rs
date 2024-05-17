@@ -23,6 +23,8 @@ fn vm_functionality(parser: &mut Parser, code_writer: &mut CodeWriter) {
                 parser.arg2(),
             ),
             CommandType::C_LABEL(_) => code_writer.write_label(&parser.arg1()),
+            CommandType::C_GOTO(_) => code_writer.write_goto(&parser.arg1()),
+            CommandType::C_IF(_) => code_writer.write_if(&parser.arg1()),
             CommandType::C_ARITHMETIC(_) => code_writer
                 .write_arithmetic(Some(parser.current_command.as_str()), parser.command_type()),
             _ => (),
@@ -40,7 +42,7 @@ pub fn vm_translator(mut args: impl Iterator<Item = String>) {
     } else {
         filepath
             .join(filepath.file_name().unwrap())
-            .with_extension(".asm")
+            .with_extension("asm")
     };
     let mut code_writer = CodeWriter::new(&output_filepath);
 

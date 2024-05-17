@@ -87,7 +87,11 @@ impl CodeWriter {
 
     // bootstrap code; SP=256;call Sys.init
     fn generate_bootstrap_code() -> String {
-        format!("@{SP_AM}\nD=A\n{SP_A}\nM=D\n@Sys.init\n0;JMP\n")
+        format!("@{SP_AM}\nD=A\n@{SP_A}\nM=D\n@Sys.init\n0;JMP\n")
+    }
+
+    fn generate_goto(label: &str) -> String {
+        format!("@{label}\n0;JMP\n")
     }
 
     pub fn set_file_name(&mut self, current_file_name: &str) {
@@ -244,6 +248,37 @@ impl CodeWriter {
             format!("({label})").as_str(),
             Some(format!("label: {label}").as_str()),
         )
+    }
+
+    pub fn write_goto(&mut self, label: &str) {
+        self.write_to_file(
+            format!("@{label}\n0;JMP\n").as_str(),
+            Some(format!("-> Goto - {label}").as_str()),
+        )
+    }
+
+    pub fn write_if(&mut self, label: &str) {
+        self.write_to_file(
+            format!("@SP\nM=M-1\nA=M\nD=M\n@{label}\nD;JGT\n").as_str(),
+            Some(format!("?-> If Goto - {label}").as_str()),
+        )
+    }
+
+    pub fn write_function(&mut self, function_name: &str, n_vars: &u32) {
+        // handles function generator
+        let mut translation = format!("({}.{})\n", self.current_file_name, function_name);
+        self.write_to_file(
+            format!("{}.{}", self.current_file_name, function_name).as_str(),
+            Some(format!("Function init - {}", function_name).as_str()),
+        )
+    }
+
+    pub fn write_call() {
+        todo!()
+    }
+
+    pub fn write_return() {
+        todo!()
     }
 
     fn write_to_file(&mut self, translation: &str, vm_command: Option<&str>) {

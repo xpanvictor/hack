@@ -1,5 +1,7 @@
 /// Standard constants
 pub const PUSH_STR: &str = "@SP\nA=M\nM=D\n@SP\nM=M+1";
+// NOTE: Enter pop directory before
+pub const POP_STR: &str = "@SP\nA=M\nD=M\n";
 pub const BASE_TEMP_SEGMENT: u128 = 5;
 pub const POP_A: &str = "R13";
 pub const POP_B: &str = "R14";

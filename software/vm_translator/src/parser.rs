@@ -16,8 +16,8 @@ pub enum CommandType {
     C_PUSH(ArgumentPair),
     C_LABEL(String),
     C_POP(ArgumentPair),
-    C_GOTO,
-    C_IF,
+    C_GOTO(String),
+    C_IF(String),
     C_FUNCTION,
     C_RETURN,
     C_CALL,
@@ -113,6 +113,16 @@ impl Parser {
                     .next()
                     .expect("A label location: string required"),
             )),
+            "goto" => CommandType::C_GOTO(String::from(
+                command_list
+                    .next()
+                    .expect("Label location required for goto"),
+            )),
+            "if-goto" => CommandType::C_IF(String::from(
+                command_list
+                    .next()
+                    .expect("Label location required for if-goto"),
+            )),
             _ => panic!(
                 "Couldn't decipher instruction type {}",
                 self.current_command
@@ -130,7 +140,9 @@ impl Parser {
             CommandType::C_PUSH(argument_pair) => argument_pair.first.to_lowercase(),
             CommandType::C_POP(argument_pair) => argument_pair.first.to_lowercase(),
             CommandType::C_LABEL(command) => command, // retain case for case sensitive language
-            _ => "".to_owned(),
+            CommandType::C_GOTO(command) => command,  // retain case for case sensitive language
+            CommandType::C_IF(command) => command,    // retain case for case sensitive language
+            _ => panic!("Command type not recoqnized"),
         }
     }
 
