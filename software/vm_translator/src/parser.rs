@@ -18,7 +18,7 @@ pub enum CommandType {
     C_POP(ArgumentPair),
     C_GOTO(String),
     C_IF(String),
-    C_FUNCTION,
+    C_FUNCTION(ArgumentPair),
     C_RETURN,
     C_CALL,
 }
@@ -123,6 +123,18 @@ impl Parser {
                     .next()
                     .expect("Label location required for if-goto"),
             )),
+            "function" => CommandType::C_FUNCTION(ArgumentPair {
+                // this is the function name
+                first: command_list
+                    .next()
+                    .expect("The function name has to be passed")
+                    .to_string(),
+                second: command_list
+                    .next()
+                    .expect("n_vars; number of local variables required")
+                    .parse()
+                    .unwrap(),
+            }),
             _ => panic!(
                 "Couldn't decipher instruction type {}",
                 self.current_command
@@ -142,6 +154,7 @@ impl Parser {
             CommandType::C_LABEL(command) => command, // retain case for case sensitive language
             CommandType::C_GOTO(command) => command,  // retain case for case sensitive language
             CommandType::C_IF(command) => command,    // retain case for case sensitive language
+            CommandType::C_FUNCTION(argument_pair) => argument_pair.first,
             _ => panic!("Command type not recoqnized"),
         }
     }
@@ -155,6 +168,7 @@ impl Parser {
             CommandType::C_PUSH(argument_pair) | CommandType::C_POP(argument_pair) => {
                 argument_pair.second
             }
+            CommandType::C_FUNCTION(argument_pair) => argument_pair.second,
             _ => panic!("Only call for C_PUSH, C_POP, C_CALL, C_FUNCTION commandType"),
         }
     }

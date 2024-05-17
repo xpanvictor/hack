@@ -3,6 +3,7 @@ use crate::constants::{
 };
 use crate::parser::{ArgumentPair, CommandType};
 use std::path::Path;
+use std::u128;
 use std::{fs::File, io::Write, path};
 
 // OpenOptions::new()
@@ -186,7 +187,7 @@ impl CodeWriter {
         );
     }
 
-    /// Writes push-pop instruction
+    /// Writes push-pop instruction to stack
     /// # Panics
     /// Don't call if CommandType isn't C_PUSH or C_POP
     pub fn write_push_pop(
@@ -264,13 +265,29 @@ impl CodeWriter {
         )
     }
 
-    pub fn write_function(&mut self, function_name: &str, n_vars: &u32) {
+    pub fn write_function(&mut self, function_name: &str, n_vars: u128) {
         // handles function generator
-        let mut translation = format!("({}.{})\n", self.current_file_name, function_name);
         self.write_to_file(
-            format!("{}.{}", self.current_file_name, function_name).as_str(),
+            format!("({}.{})\n", self.current_file_name, function_name).as_str(),
             Some(format!("Function init - {}", function_name).as_str()),
-        )
+        );
+
+        // push 0 to local N_VARS times
+        for i in 0..n_vars {
+            self.write_to_file(
+                format!("{}\nA=D\n@0\n", Self::generate_extend_address("local", i)).as_str(),
+                Some(format!("% func: {function_name}-{n_vars}").as_str()),
+            )
+            // self.write_push_pop(
+            //     None,
+            //     CommandType::C_PUSH(ArgumentPair {
+            //         first: "".to_string(),
+            //         second: 0,
+            //     }),
+            //     "local",
+            //     i.into(),
+            // );
+        }
     }
 
     pub fn write_call() {
