@@ -274,27 +274,49 @@ impl CodeWriter {
 
         // push 0 to local N_VARS times
         for i in 0..n_vars {
-            self.write_to_file(
-                format!("{}\nA=D\n@0\n", Self::generate_extend_address("local", i)).as_str(),
-                Some(format!("% func: {function_name}-{n_vars}").as_str()),
-            )
-            // self.write_push_pop(
-            //     None,
-            //     CommandType::C_PUSH(ArgumentPair {
-            //         first: "".to_string(),
-            //         second: 0,
-            //     }),
-            //     "local",
-            //     i.into(),
-            // );
+            self.write_push_pop(
+                None,
+                CommandType::C_PUSH(ArgumentPair {
+                    first: "constant".to_string(),
+                    second: 0,
+                }),
+                "constant",
+                0,
+            );
+
+            self.write_push_pop(
+                None,
+                CommandType::C_POP(ArgumentPair {
+                    first: "local".to_string(),
+                    second: i,
+                }),
+                "local",
+                i,
+            );
         }
     }
 
-    pub fn write_call() {
+    // generate fn call and inform that n_args have been pushed, call
+    pub fn write_call(&mut self, function_name: &str, n_args: u128) {
+        // push retAddr by generating a label
+        // push lcl, arg, this, that
+        // arg = sp - 5 - n_args
+        // lcl = sp
+        // goto function_name
         todo!()
     }
 
+    // generates the return for a callee function
     pub fn write_return() {
+        // write LCL to temp value <frame>
+        // store retAddr from frame
+        // arg = pop
+        // sp = arg + 1
+        // that = frame - 1
+        // this = frame - 2
+        // arg = frame - 3
+        // lcl = frame - 4
+        // goto retAddr
         todo!()
     }
 
