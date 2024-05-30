@@ -299,11 +299,39 @@ impl CodeWriter {
     // generate fn call and inform that n_args have been pushed, call
     pub fn write_call(&mut self, function_name: &str, n_args: u128) {
         // push retAddr by generating a label
+        self.write_to_file(
+            format!(
+                "\n({}.{function_name}.return)\nD=A\n{PUSH_STR}",
+                self.current_file_name
+            )
+            .as_str(),
+            Some("#-# push retAddr by generating a label"),
+        );
         // push lcl, arg, this, that
+        let segments_to_push = vec!["local", "arg", "this", "that"];
+        for segment in segments_to_push {
+            self.write_push_pop(
+                None,
+                CommandType::C_PUSH(ArgumentPair {
+                    first: segment.to_string(),
+                    second: 0,
+                }),
+                segment,
+                0,
+            );
+        }
         // arg = sp - 5 - n_args
+        self.write_to_file(
+            format!("\n@5\nD=A\n@SP\nD=A-D\n@{n_args}\nD=D-A\n@ARG\nM=D").as_str(),
+            Some("#-# ARG = SP - 5 - n_arg"),
+        );
         // lcl = sp
+        self.write_to_file("\n@SP\nA=M\nD=M\n@LCL\nM=D", Some("#-#LCL = SP"));
         // goto function_name
-        todo!()
+        self.write_to_file(
+            format!("\n@{function_name}\n0;JMP").as_str(),
+            Some("#-# Go to fn"),
+        );
     }
 
     // generates the return for a callee function
