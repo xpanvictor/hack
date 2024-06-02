@@ -135,6 +135,7 @@ impl Parser {
                     .parse()
                     .unwrap(),
             }),
+            "return" => CommandType::C_RETURN,
             _ => panic!(
                 "Couldn't decipher instruction type {}",
                 self.current_command

@@ -266,6 +266,7 @@ impl CodeWriter {
     }
 
     pub fn write_function(&mut self, function_name: &str, n_vars: u128) {
+        self.write_comment_to_file("Function statement");
         // handles function generator
         self.write_to_file(
             format!("({}.{})\n", self.current_file_name, function_name).as_str(),
@@ -298,6 +299,7 @@ impl CodeWriter {
 
     // generate fn call and inform that n_args have been pushed, call
     pub fn write_call(&mut self, function_name: &str, n_args: u128) {
+        self.write_comment_to_file("Call statement");
         // push retAddr by generating a label
         self.write_to_file(
             format!(
@@ -335,17 +337,52 @@ impl CodeWriter {
     }
 
     // generates the return for a callee function
-    pub fn write_return() {
+    pub fn write_return(&mut self) {
+        self.write_comment_to_file("Return command");
         // write LCL to temp value <frame>
-        // store retAddr from frame
+        self.write_to_file("\n@LCL\nD=M\n@FRAME\nM=D", Some("#-# frame = LCL"));
+        // store retAddr from *(frame - 5)
+        self.write_to_file(
+            "\n@FRAME\nD=M\n@5\nA=D-A\nD=M\n@retAddr\nM=D",
+            Some("#-# retAddr = *(frame - 5)"),
+        );
         // arg = pop
+        self.write_push_pop(
+            None,
+            CommandType::C_PUSH(ArgumentPair {
+                first: "arg".to_string(),
+                second: 0,
+            }),
+            "arg",
+            0,
+        );
         // sp = arg + 1
+        self.write_to_file("\n@ARG\nD=M+1\n@SP\nM=D", Some("#-# SP=ARG+1"));
         // that = frame - 1
+        self.write_to_file("\n@FRAME\nD=M-1\n@THIS\nM=D", Some("#-# THAT=FRAME-1"));
         // this = frame - 2
+        self.write_to_file(
+            "\n@FRAME\nD=M\n@2\nD=D-A\n@THIS\nM=D",
+            Some("#-# THIS=FRAME-2"),
+        );
         // arg = frame - 3
+        self.write_to_file(
+            "\n@FRAME\nD=M\n@3\nD=D-A\n@ARG\nM=D",
+            Some("#-# THAT=FRAME-3"),
+        );
         // lcl = frame - 4
+        self.write_to_file(
+            "\n@FRAME\nD=M\n@4\nD=D-A\n@LCL\nM=D",
+            Some("#-# LCL=FRAME-4"),
+        );
         // goto retAddr
-        todo!()
+        self.write_goto("retAddr");
+    }
+
+    fn write_comment_to_file(&mut self, comment: &str) {
+        self.translated_assembly_file_handle
+            .write_all(format!("// X_C:=> {}\n", comment).as_bytes())
+            .expect("Couldn't write comment to output file");
     }
 
     fn write_to_file(&mut self, translation: &str, vm_command: Option<&str>) {

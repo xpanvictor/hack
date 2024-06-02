@@ -28,6 +28,7 @@ fn vm_functionality(parser: &mut Parser, code_writer: &mut CodeWriter) {
             CommandType::C_FUNCTION(_) => code_writer.write_function(&parser.arg1(), parser.arg2()),
             CommandType::C_ARITHMETIC(_) => code_writer
                 .write_arithmetic(Some(parser.current_command.as_str()), parser.command_type()),
+            CommandType::C_RETURN => code_writer.write_return(),
             _ => (),
         };
     }
