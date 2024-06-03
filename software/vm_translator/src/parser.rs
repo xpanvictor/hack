@@ -20,7 +20,7 @@ pub enum CommandType {
     C_IF(String),
     C_FUNCTION(ArgumentPair),
     C_RETURN,
-    C_CALL,
+    C_CALL(ArgumentPair),
 }
 
 pub struct Parser {
@@ -136,6 +136,17 @@ impl Parser {
                     .unwrap(),
             }),
             "return" => CommandType::C_RETURN,
+            "call" => CommandType::C_CALL(ArgumentPair {
+                first: command_list
+                    .next()
+                    .expect("function name not passed")
+                    .to_string(),
+                second: command_list
+                    .next()
+                    .expect("nArgs: number of arguments pushed ahead required")
+                    .parse()
+                    .unwrap(),
+            }),
             _ => panic!(
                 "Couldn't decipher instruction type {}",
                 self.current_command
@@ -156,7 +167,7 @@ impl Parser {
             CommandType::C_GOTO(command) => command,  // retain case for case sensitive language
             CommandType::C_IF(command) => command,    // retain case for case sensitive language
             CommandType::C_FUNCTION(argument_pair) => argument_pair.first,
-            _ => panic!("Command type not recoqnized"),
+            CommandType::C_CALL(argument_pair) => argument_pair.first,
         }
     }
 
@@ -170,6 +181,7 @@ impl Parser {
                 argument_pair.second
             }
             CommandType::C_FUNCTION(argument_pair) => argument_pair.second,
+            CommandType::C_CALL(argument_pair) => argument_pair.second,
             _ => panic!("Only call for C_PUSH, C_POP, C_CALL, C_FUNCTION commandType"),
         }
     }

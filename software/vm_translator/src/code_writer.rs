@@ -71,7 +71,7 @@ impl CodeWriter {
 
     // so extends an address by an index
     fn generate_extend_address(bp: &str, index: u128) -> String {
-        format!("@{bp}\nD=M\n@{index}\nD=A+D")
+        format!("@{bp}\nD=M\n@{index}\nD=D+A")
     }
 
     fn generate_jump_address(bp: &str, index: u128) -> String {
@@ -253,7 +253,7 @@ impl CodeWriter {
 
     pub fn write_goto(&mut self, label: &str) {
         self.write_to_file(
-            format!("@{label}\n0;JMP\n").as_str(),
+            Self::generate_goto(label).as_str(),
             Some(format!("-> Goto - {label}").as_str()),
         )
     }
@@ -275,8 +275,9 @@ impl CodeWriter {
 
         // push 0 to local N_VARS times
         for i in 0..n_vars {
+            // push constant 0
             self.write_push_pop(
-                None,
+                Some("push constant 0"),
                 CommandType::C_PUSH(ArgumentPair {
                     first: "constant".to_string(),
                     second: 0,
@@ -285,8 +286,9 @@ impl CodeWriter {
                 0,
             );
 
+            // pop local i
             self.write_push_pop(
-                None,
+                Some("pop local i"),
                 CommandType::C_POP(ArgumentPair {
                     first: "local".to_string(),
                     second: i,
@@ -300,6 +302,17 @@ impl CodeWriter {
     // generate fn call and inform that n_args have been pushed, call
     pub fn write_call(&mut self, function_name: &str, n_args: u128) {
         self.write_comment_to_file("Call statement");
+        // generate a call addr for returning to unique location
+        let ret_call_addr = format!(
+            "{}.{}.return${}",
+            self.current_file_name,
+            function_name,
+            self.generate_depth()
+        );
+
+        // BUG: Traced, the issue is with the return addr, its mapping
+        // is wrong
+
         // push retAddr by generating a label
         self.write_to_file(
             format!(
@@ -330,10 +343,8 @@ impl CodeWriter {
         // lcl = sp
         self.write_to_file("\n@SP\nA=M\nD=M\n@LCL\nM=D", Some("#-#LCL = SP"));
         // goto function_name
-        self.write_to_file(
-            format!("\n@{function_name}\n0;JMP").as_str(),
-            Some("#-# Go to fn"),
-        );
+        self.write_goto(format!("\n@{function_name}\n0;JMP").as_str());
+        self.write_to_file(format!().as_str(), Some("#-# Go to fn"));
     }
 
     // generates the return for a callee function
@@ -416,3 +427,6 @@ impl Drop for CodeWriter {
         );
     }
 }
+
+#[cfg(test)]
+mod tests {}
