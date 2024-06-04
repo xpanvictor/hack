@@ -20,6 +20,8 @@ pub struct CodeWriter {
     // pointer to note depth of jump statement
     // NOTE: Never read directly, use helper function `generate_depth`
     jump_depth: usize,
+    // a convenience to fetch currently running function
+    active_function: Option<String>,
 }
 
 // fn get_pointer_keywords() -> Keys<&'static str, &'static str> {
@@ -40,6 +42,7 @@ impl CodeWriter {
                 .unwrap()
                 .to_string(),
             jump_depth: 0,
+            active_function: None,
         };
         code_writer.write_to_file(&Self::generate_bootstrap_code(), Some(VM_COMMENT));
         code_writer
@@ -63,6 +66,18 @@ impl CodeWriter {
     fn generate_depth(&mut self) -> usize {
         self.jump_depth += 1;
         self.jump_depth
+    }
+
+    // helper function to generate label
+    fn generate_label(&self, label: &str) -> String {
+        if let Some(active_function_name) = &self.active_function {
+            format!(
+                "({}.{}${})",
+                self.current_file_name, active_function_name, label
+            )
+        } else {
+            format!("({})", label)
+        }
     }
 
     // fn generate_extend_base(bp: &str, index: u128) -> String {
@@ -246,7 +261,7 @@ impl CodeWriter {
 
     pub fn write_label(&mut self, label: &str) {
         self.write_to_file(
-            format!("({label})").as_str(),
+            &self.generate_label(label),
             Some(format!("label: {label}").as_str()),
         )
     }
@@ -303,11 +318,10 @@ impl CodeWriter {
     pub fn write_call(&mut self, function_name: &str, n_args: u128) {
         self.write_comment_to_file("Call statement");
         // generate a call addr for returning to unique location
+        let jump_depth = self.generate_depth();
         let ret_call_addr = format!(
             "{}.{}.return${}",
-            self.current_file_name,
-            function_name,
-            self.generate_depth()
+            self.current_file_name, function_name, jump_depth
         );
 
         // BUG: Traced, the issue is with the return addr, its mapping
@@ -315,15 +329,11 @@ impl CodeWriter {
 
         // push retAddr by generating a label
         self.write_to_file(
-            format!(
-                "\n({}.{function_name}.return)\nD=A\n{PUSH_STR}",
-                self.current_file_name
-            )
-            .as_str(),
+            format!("\n@{}\nD=A\n{PUSH_STR}", ret_call_addr).as_str(),
             Some("#-# push retAddr by generating a label"),
         );
         // push lcl, arg, this, that
-        let segments_to_push = vec!["local", "arg", "this", "that"];
+        let segments_to_push = vec!["local", "argument", "this", "that"];
         for segment in segments_to_push {
             self.write_push_pop(
                 None,
@@ -344,7 +354,7 @@ impl CodeWriter {
         self.write_to_file("\n@SP\nA=M\nD=M\n@LCL\nM=D", Some("#-#LCL = SP"));
         // goto function_name
         self.write_goto(format!("\n@{function_name}\n0;JMP").as_str());
-        self.write_to_file(format!().as_str(), Some("#-# Go to fn"));
+        // TODO: injects return address
     }
 
     // generates the return for a callee function
@@ -361,10 +371,10 @@ impl CodeWriter {
         self.write_push_pop(
             None,
             CommandType::C_PUSH(ArgumentPair {
-                first: "arg".to_string(),
+                first: "argument".to_string(),
                 second: 0,
             }),
-            "arg",
+            "argument",
             0,
         );
         // sp = arg + 1
@@ -399,7 +409,7 @@ impl CodeWriter {
     fn write_to_file(&mut self, translation: &str, vm_command: Option<&str>) {
         let total_translation = if let Some(vm_command_str) = vm_command {
             format!(
-                "{}{}\n",
+                "{}\n{}\n",
                 Self::generate_comment(vm_command_str),
                 translation
             )
