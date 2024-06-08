@@ -282,9 +282,11 @@ impl CodeWriter {
 
     pub fn write_function(&mut self, function_name: &str, n_vars: u128) {
         self.write_comment_to_file("Function statement");
+        // this is the currently active function
+        self.active_function = Some(function_name.to_string());
         // handles function generator
         self.write_to_file(
-            format!("({}.{})\n", self.current_file_name, function_name).as_str(),
+            format!("({})\n", function_name).as_str(),
             Some(format!("Function init - {}", function_name).as_str()),
         );
 
@@ -319,10 +321,11 @@ impl CodeWriter {
         self.write_comment_to_file("Call statement");
         // generate a call addr for returning to unique location
         let jump_depth = self.generate_depth();
-        let ret_call_addr = format!(
-            "{}.{}.return${}",
-            self.current_file_name, function_name, jump_depth
-        );
+        let ret_call_addr = if let Some(active_function_name) = &self.active_function {
+            format!("{}.return${}", active_function_name, jump_depth)
+        } else {
+            format!("$return{}", jump_depth)
+        };
 
         // BUG: Traced, the issue is with the return addr, its mapping
         // is wrong
@@ -355,6 +358,7 @@ impl CodeWriter {
         // goto function_name
         self.write_goto(format!("\n@{function_name}\n0;JMP").as_str());
         // TODO: injects return address
+        self.write_label(&ret_call_addr);
     }
 
     // generates the return for a callee function
