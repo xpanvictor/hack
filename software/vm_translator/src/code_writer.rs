@@ -291,7 +291,7 @@ impl CodeWriter {
         );
 
         // push 0 to local N_VARS times
-        for i in 0..n_vars {
+        for _i in 0..n_vars {
             // push constant 0
             self.write_push_pop(
                 Some("push constant 0"),
@@ -301,17 +301,6 @@ impl CodeWriter {
                 }),
                 "constant",
                 0,
-            );
-
-            // pop local i
-            self.write_push_pop(
-                Some("pop local i"),
-                CommandType::C_POP(ArgumentPair {
-                    first: "local".to_string(),
-                    second: i,
-                }),
-                "local",
-                i,
             );
         }
     }
@@ -374,7 +363,7 @@ impl CodeWriter {
         // arg = pop
         self.write_push_pop(
             None,
-            CommandType::C_PUSH(ArgumentPair {
+            CommandType::C_POP(ArgumentPair {
                 first: "argument".to_string(),
                 second: 0,
             }),
@@ -384,24 +373,24 @@ impl CodeWriter {
         // sp = arg + 1
         self.write_to_file("\n@ARG\nD=M+1\n@SP\nM=D", Some("#-# SP=ARG+1"));
         // that = frame - 1
-        self.write_to_file("\n@FRAME\nD=M-1\n@THIS\nM=D", Some("#-# THAT=FRAME-1"));
+        self.write_to_file("\n@FRAME\nA=M-1\nD=M\n@THAT\nM=D", Some("#-# THAT=*(FRAME-1)"));
         // this = frame - 2
         self.write_to_file(
-            "\n@FRAME\nD=M\n@2\nD=D-A\n@THIS\nM=D",
-            Some("#-# THIS=FRAME-2"),
+            "\n@FRAME\nD=M\n@2\nA=D-A\nD=M\n@THIS\nM=D",
+            Some("#-# THIS=*(FRAME-2)"),
         );
         // arg = frame - 3
         self.write_to_file(
-            "\n@FRAME\nD=M\n@3\nD=D-A\n@ARG\nM=D",
-            Some("#-# THAT=FRAME-3"),
+            "\n@FRAME\nD=M\n@3\nA=D-A\nD=M\n@ARG\nM=D",
+            Some("#-# ARG=*(FRAME-3)"),
         );
         // lcl = frame - 4
         self.write_to_file(
-            "\n@FRAME\nD=M\n@4\nD=D-A\n@LCL\nM=D",
-            Some("#-# LCL=FRAME-4"),
+            "\n@FRAME\nD=M\n@4\nA=D-A\nD=M\n@LCL\nM=D",
+            Some("#-# LCL=*(FRAME-4)"),
         );
         // goto retAddr
-        self.write_goto("retAddr");
+        self.write_to_file("\n@retAddr\nA=M\n0;JMP", Some("#-# goto retAddr"));
     }
 
     fn write_comment_to_file(&mut self, comment: &str) {
