@@ -1,5 +1,6 @@
 use std::fs;
 use std::iter::Peekable;
+use std::path::Path;
 use std::vec::IntoIter;
 
 #[derive(Clone)]
@@ -13,13 +14,13 @@ pub struct ArgumentPair {
 pub enum CommandType {
     C_ARITHMETIC(String),
     C_PUSH(ArgumentPair),
-    C_LABEL,
+    C_LABEL(String),
     C_POP(ArgumentPair),
-    C_GOTO,
-    C_IF,
-    C_FUNCTION,
+    C_GOTO(String),
+    C_IF(String),
+    C_FUNCTION(ArgumentPair),
     C_RETURN,
-    C_CALL,
+    C_CALL(ArgumentPair),
 }
 
 pub struct Parser {
@@ -28,8 +29,8 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(filepath: &str) -> Parser {
-        println!("Reading vm file: {}", filepath);
+    pub fn new(filepath: &Path) -> Parser {
+        println!("Reading vm file: {}", filepath.display());
         Parser {
             vm_source_code: Box::new(
                 fs::read_to_string(filepath)
@@ -107,7 +108,49 @@ impl Parser {
                     .parse()
                     .unwrap(),
             }),
-            _ => panic!("Couldn't decipher instruction type"),
+            "label" => CommandType::C_LABEL(String::from(
+                command_list
+                    .next()
+                    .expect("A label location: string required"),
+            )),
+            "goto" => CommandType::C_GOTO(String::from(
+                command_list
+                    .next()
+                    .expect("Label location required for goto"),
+            )),
+            "if-goto" => CommandType::C_IF(String::from(
+                command_list
+                    .next()
+                    .expect("Label location required for if-goto"),
+            )),
+            "function" => CommandType::C_FUNCTION(ArgumentPair {
+                // this is the function name
+                first: command_list
+                    .next()
+                    .expect("The function name has to be passed")
+                    .to_string(),
+                second: command_list
+                    .next()
+                    .expect("n_vars; number of local variables required")
+                    .parse()
+                    .unwrap(),
+            }),
+            "return" => CommandType::C_RETURN,
+            "call" => CommandType::C_CALL(ArgumentPair {
+                first: command_list
+                    .next()
+                    .expect("function name not passed")
+                    .to_string(),
+                second: command_list
+                    .next()
+                    .expect("nArgs: number of arguments pushed ahead required")
+                    .parse()
+                    .unwrap(),
+            }),
+            _ => panic!(
+                "Couldn't decipher instruction type {}",
+                self.current_command
+            ),
         }
     }
 
@@ -120,7 +163,11 @@ impl Parser {
             CommandType::C_ARITHMETIC(command) => command.to_lowercase(),
             CommandType::C_PUSH(argument_pair) => argument_pair.first.to_lowercase(),
             CommandType::C_POP(argument_pair) => argument_pair.first.to_lowercase(),
-            _ => "".to_owned(),
+            CommandType::C_LABEL(command) => command, // retain case for case sensitive language
+            CommandType::C_GOTO(command) => command,  // retain case for case sensitive language
+            CommandType::C_IF(command) => command,    // retain case for case sensitive language
+            CommandType::C_FUNCTION(argument_pair) => argument_pair.first,
+            CommandType::C_CALL(argument_pair) => argument_pair.first,
         }
     }
 
@@ -133,6 +180,8 @@ impl Parser {
             CommandType::C_PUSH(argument_pair) | CommandType::C_POP(argument_pair) => {
                 argument_pair.second
             }
+            CommandType::C_FUNCTION(argument_pair) => argument_pair.second,
+            CommandType::C_CALL(argument_pair) => argument_pair.second,
             _ => panic!("Only call for C_PUSH, C_POP, C_CALL, C_FUNCTION commandType"),
         }
     }

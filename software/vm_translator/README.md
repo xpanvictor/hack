@@ -9,6 +9,13 @@ Hack's assembly instruction.
 I have ensured the translator documents
 each processed command to make debugging easier.
 
+## Version 2: Stage 2 translator
+- provide stack pointers initialization requirements
+- provide jump statement requirment 
+- function init and goto statement
+- conditional goto
+- testing with recursion
+
 
 ## Usage
 ```bash

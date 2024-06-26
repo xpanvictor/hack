@@ -1,3 +1,11 @@
+// ----: // ** VM--CODE; x low level requirement ** ----
+@256
+D=A
+SP
+M=D
+@Sys.init
+0;JMP
+
 // ----: push constant 111 ----
 @111
 D=A
