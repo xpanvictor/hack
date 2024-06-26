@@ -45,6 +45,7 @@ impl CodeWriter {
             active_function: None,
         };
         code_writer.write_to_file(&Self::generate_bootstrap_code(), Some(VM_COMMENT));
+        code_writer.write_call("Sys.init", 0);
         code_writer
     }
 
@@ -68,16 +69,17 @@ impl CodeWriter {
         self.jump_depth
     }
 
+    fn generate_label_str(&self, label: &str) -> String {
+        if let Some(active_function_name) = &self.active_function {
+            format!("{}${}", active_function_name, label)
+        } else {
+            label.to_string()
+        }
+    }
+
     // helper function to generate label
     fn generate_label(&self, label: &str) -> String {
-        if let Some(active_function_name) = &self.active_function {
-            format!(
-                "({}.{}${})",
-                self.current_file_name, active_function_name, label
-            )
-        } else {
-            format!("({})", label)
-        }
+        format!("({})", self.generate_label_str(label))
     }
 
     // fn generate_extend_base(bp: &str, index: u128) -> String {
@@ -103,7 +105,7 @@ impl CodeWriter {
 
     // bootstrap code; SP=256;call Sys.init
     fn generate_bootstrap_code() -> String {
-        format!("@{SP_AM}\nD=A\n@{SP_A}\nM=D\n@Sys.init\n0;JMP\n")
+        format!("@{SP_AM}\nD=A\n@{SP_A}\nM=D")
     }
 
     fn generate_goto(label: &str) -> String {
@@ -267,15 +269,17 @@ impl CodeWriter {
     }
 
     pub fn write_goto(&mut self, label: &str) {
+        let label = self.generate_label_str(label);
         self.write_to_file(
-            Self::generate_goto(label).as_str(),
+            Self::generate_goto(&label).as_str(),
             Some(format!("-> Goto - {label}").as_str()),
         )
     }
 
     pub fn write_if(&mut self, label: &str) {
+        let label = self.generate_label_str(label);
         self.write_to_file(
-            format!("@SP\nM=M-1\nA=M\nD=M\n@{label}\nD;JGT\n").as_str(),
+            format!("@SP\nM=M-1\nA=M\nD=M\n@{label}\nD;JLT\n").as_str(),
             Some(format!("?-> If Goto - {label}").as_str()),
         )
     }
@@ -305,49 +309,59 @@ impl CodeWriter {
         }
     }
 
+    // helper fn to push segment addr
+    fn write_push_segment_addr(&mut self, segment: &str) {
+        let keyword = get_pointer_mapping(segment).expect("Unrecognized segment");
+        self.write_to_file(
+            format!("@{}\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1", keyword).as_str(),
+            Some(format!("#-# pushing segment {}", keyword).as_str()),
+        );
+    }
+
     // generate fn call and inform that n_args have been pushed, call
     pub fn write_call(&mut self, function_name: &str, n_args: u128) {
         self.write_comment_to_file("Call statement");
         // generate a call addr for returning to unique location
         let jump_depth = self.generate_depth();
-        let ret_call_addr = if let Some(active_function_name) = &self.active_function {
-            format!("{}.return${}", active_function_name, jump_depth)
-        } else {
-            format!("$return{}", jump_depth)
-        };
+        let return_label = self.generate_label_str("return");
+        let ret_call_addr = format!("{}.{}", return_label, jump_depth);
 
         // BUG: Traced, the issue is with the return addr, its mapping
         // is wrong
 
         // push retAddr by generating a label
         self.write_to_file(
-            format!("\n@{}\nD=A\n{PUSH_STR}", ret_call_addr).as_str(),
+            format!("@{}\nD=A\n{PUSH_STR}", ret_call_addr).as_str(),
             Some("#-# push retAddr by generating a label"),
         );
         // push lcl, arg, this, that
         let segments_to_push = vec!["local", "argument", "this", "that"];
         for segment in segments_to_push {
-            self.write_push_pop(
-                None,
-                CommandType::C_PUSH(ArgumentPair {
-                    first: segment.to_string(),
-                    second: 0,
-                }),
-                segment,
-                0,
-            );
+            self.write_push_segment_addr(segment);
+            //            self.write_push_pop(
+            //                None,
+            //                CommandType::C_PUSH(ArgumentPair {
+            //                    first: segment.to_string(),
+            //                    second: 0,
+            //                }),
+            //                segment,
+            //                0,
+            //            );
         }
-        // arg = sp - 5 - n_args
+        // arg = *sp - 5 - n_args
         self.write_to_file(
-            format!("\n@5\nD=A\n@SP\nD=A-D\n@{n_args}\nD=D-A\n@ARG\nM=D").as_str(),
+            format!("\n@5\nD=A\n@SP\nD=M-D\n@{n_args}\nD=D-A\n@ARG\nM=D").as_str(),
             Some("#-# ARG = SP - 5 - n_arg"),
         );
         // lcl = sp
-        self.write_to_file("\n@SP\nA=M\nD=M\n@LCL\nM=D", Some("#-#LCL = SP"));
+        self.write_to_file("\n@SP\nD=M\n@LCL\nM=D", Some("#-# LCL = SP"));
         // goto function_name
-        self.write_goto(format!("\n@{function_name}\n0;JMP").as_str());
+        self.write_to_file(
+            format!("\n@{}\n0;JMP", function_name).as_str(),
+            Some(&format!("#-# fn {function_name} goto")),
+        );
         // TODO: injects return address
-        self.write_label(&ret_call_addr);
+        self.write_label(format!("return.{}", jump_depth).as_str());
     }
 
     // generates the return for a callee function
@@ -373,7 +387,10 @@ impl CodeWriter {
         // sp = arg + 1
         self.write_to_file("\n@ARG\nD=M+1\n@SP\nM=D", Some("#-# SP=ARG+1"));
         // that = frame - 1
-        self.write_to_file("\n@FRAME\nA=M-1\nD=M\n@THAT\nM=D", Some("#-# THAT=*(FRAME-1)"));
+        self.write_to_file(
+            "\n@FRAME\nA=M-1\nD=M\n@THAT\nM=D",
+            Some("#-# THAT=*(FRAME-1)"),
+        );
         // this = frame - 2
         self.write_to_file(
             "\n@FRAME\nD=M\n@2\nA=D-A\nD=M\n@THIS\nM=D",
