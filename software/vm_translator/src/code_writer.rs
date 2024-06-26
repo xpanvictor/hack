@@ -15,7 +15,7 @@ use std::{fs::File, io::Write, path};
 pub struct CodeWriter {
     translated_assembly_file_handle: File,
     output_file_path: path::PathBuf,
-    // shous currently parsing file
+    // shows currently parsing file
     current_file_name: String,
     // pointer to note depth of jump statement
     // NOTE: Never read directly, use helper function `generate_depth`
@@ -58,7 +58,9 @@ impl CodeWriter {
     fn generate_static_mapper(&self, index: u128) -> String {
         format!(
             "{}.{}",
-            self.output_file_path.file_stem().unwrap().to_str().unwrap(),
+            // static file should reflect active file as well
+            // self.output_file_path.file_stem().unwrap().to_str().unwrap(),
+            self.current_file_name,
             index
         )
     }

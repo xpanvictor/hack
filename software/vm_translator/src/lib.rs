@@ -7,7 +7,7 @@ mod constants;
 pub mod parser;
 
 use glob::glob;
-use std::path::Path;
+use std::   path::Path;
 
 use code_writer::CodeWriter;
 use parser::{CommandType, Parser};
@@ -54,6 +54,11 @@ pub fn vm_translator(mut args: impl Iterator<Item = String>) {
             match entry {
                 Ok(file_path) => {
                     let mut parser = Parser::new(&file_path);
+                    // set the new file name here
+                    code_writer.set_file_name(
+                        file_path.as_path()
+                            .file_stem().unwrap().to_str().expect("Invalid file encountered in dir")
+                    );
                     vm_functionality(&mut parser, &mut code_writer);
                 }
                 Err(e) => println!("Invalid path dir provided {:?}", e),
