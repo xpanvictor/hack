@@ -28,6 +28,7 @@ impl<'a> Tokenizer<'a> {
             source: Box::new(
                 fs::read_to_string(file_path)
                     .expect("Couldn't read source stream")
+                    // TODO: might have to clean here
                     .split_ascii_whitespace()
                     .into_iter()
                     .peekable()
@@ -38,8 +39,27 @@ impl<'a> Tokenizer<'a> {
 
     pub fn has_more_token(&mut self) -> bool {self.source.peek().is_some()}
 
+    fn purify_next_token(&mut self) -> &str {
+        // remove comments
+        todo!("Remove comments")
+    }
+
+    fn get_token(raw_token: &str) -> TokenType<'_> {
+        // some match logic
+        todo!("token mapping")
+    }
+
+    /// Advances by setting next token from source to curr token
+    ///
+    /// # Panics
+    ///
+    /// Should be called only if has_more_token
     pub fn advance(&mut self) {
-        todo!()
+        if !self.has_more_token() {
+            panic!("No more tokens!")
+        }
+        // A cleaner sequence
+        self.current_token = Some(Self::get_token(self.purify_next_token()));
     }
 
     pub fn token_type(&mut self) -> TokenType {todo!()}
