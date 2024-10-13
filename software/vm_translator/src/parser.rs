@@ -163,9 +163,9 @@ impl Parser {
             CommandType::C_ARITHMETIC(command) => command.to_lowercase(),
             CommandType::C_PUSH(argument_pair) => argument_pair.first.to_lowercase(),
             CommandType::C_POP(argument_pair) => argument_pair.first.to_lowercase(),
-            CommandType::C_LABEL(command) => command, // retain case for case sensitive language
-            CommandType::C_GOTO(command) => command,  // retain case for case sensitive language
-            CommandType::C_IF(command) => command,    // retain case for case sensitive language
+            CommandType::C_LABEL(command) => command, // retain case for case-sensitive language
+            CommandType::C_GOTO(command) => command,  // retain case for case-sensitive language
+            CommandType::C_IF(command) => command,    // retain case for case-sensitive language
             CommandType::C_FUNCTION(argument_pair) => argument_pair.first,
             CommandType::C_CALL(argument_pair) => argument_pair.first,
         }

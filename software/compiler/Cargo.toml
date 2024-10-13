@@ -1,0 +1,8 @@
+[package]
+name = "compiler"
+version = "0.1.0"
+edition = "2021"
+description = "LL1 compiler for the hack computer."
+repository = "https://github.com/xpanvictor/hack/tree/master/software/compiler"
+
+[dependencies]
