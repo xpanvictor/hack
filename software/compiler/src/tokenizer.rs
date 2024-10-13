@@ -9,13 +9,13 @@ use std::vec::IntoIter;
 
 pub struct Tokenizer<'a> {
     source: Box<Peekable<core::str::SplitAsciiWhitespace<'a>>>,
-    current_token: TokenType,
+    current_token: TokenType<'a>,
 }
 
 #[allow(non_camel_case_types)]
-pub enum TokenType {
+pub enum TokenType<'a> {
     T_TOKENS, // default token
-    T_KEYWORD,
+    T_KEYWORD(&'a str),
     T_SYMBOL,
     T_IDENTIFIER,
     T_INT_CONST,
@@ -38,4 +38,20 @@ impl<'a> Tokenizer<'a> {
     }
 
     pub fn has_more_token(&mut self) -> bool {self.source.peek().is_some()}
+
+    pub fn advance(&mut self) {
+        todo!()
+    }
+
+    pub fn token_type(&mut self) -> TokenType {todo!()}
+
+    pub fn key_word(&self) -> &str {todo!()}
+
+    pub fn symbol(&self) -> char {todo!()}
+
+    pub fn identifier(&self) -> &str {todo!()}
+
+    pub fn int_val(&self) -> usize {todo!()}
+
+    pub fn string_val(&self) -> &str {todo!()}
 }
