@@ -9,12 +9,11 @@ use std::vec::IntoIter;
 
 pub struct Tokenizer<'a> {
     source: Box<Peekable<core::str::SplitAsciiWhitespace<'a>>>,
-    current_token: TokenType<'a>,
+    current_token: Option<TokenType<'a>>,
 }
 
 #[allow(non_camel_case_types)]
 pub enum TokenType<'a> {
-    T_TOKENS, // default token
     T_KEYWORD(&'a str),
     T_SYMBOL,
     T_IDENTIFIER,
@@ -33,7 +32,7 @@ impl<'a> Tokenizer<'a> {
                     .into_iter()
                     .peekable()
             ),
-            current_token: TokenType::T_TOKENS
+            current_token: None
         }
     }
 
