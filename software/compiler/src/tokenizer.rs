@@ -4,7 +4,7 @@
 
 use std::iter::Peekable;
 use std::path::Path;
-use std::{fs, usize, vec};
+use std::{fs, vec};
 
 pub struct Tokenizer {
     source: Box<Peekable<vec::IntoIter<char>>>,
@@ -17,7 +17,7 @@ pub enum TokenType {
     T_SYMBOL,
     T_IDENTIFIER,
     T_INT_CONST(u32),
-    T_STRING_CONST,
+    T_STRING_CONST(String),
 }
 
 /// States for the tokenizer
@@ -87,10 +87,7 @@ impl Tokenizer {
         match curr_state {
             State::Start => todo!(),
             State::Comment(is_multiline_comment) => todo!(),
-            State::Ascii => {
-                let combined_value = self.consume_while(&mut |ch| !ch.is_whitespace());
-                Self::get_char_type(&combined_value)
-            }
+            State::Ascii => self.get_char_type(),
             State::Number => {
                 let calc_number = self
                     .consume_while(&mut |ch| !ch.is_whitespace())
@@ -123,8 +120,16 @@ impl Tokenizer {
         gen_result
     }
 
-    fn get_char_type(val: &str) -> TokenType {
-        todo!()
+    fn get_char_type(&mut self) -> TokenType {
+        let ch = self.source.peek().unwrap();
+        match ch {
+            ch if ch == &'"' => {
+                let str_const = self.consume_while(&mut |c| *c != '"');
+                // TODO: pick last '"' char as well
+                TokenType::T_STRING_CONST(str_const)
+            }
+            _ => TokenType::T_SYMBOL,
+        }
     }
 
     /// Advances by setting next token from source to curr token
