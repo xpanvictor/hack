@@ -41,23 +41,29 @@ impl Tokenizer {
         self.source.peek().is_some()
     }
 
-    fn purify_calculate_next_token(&mut self) -> &str {
+    fn purify_calculate_next_token(&mut self) -> char {
         //! Note: Handles a bunch of functionalities for token management
         //!
         //! 1. Removes comments.
         //! 2. Joins groups of certain tokens
         // clean comment
-        let mut expr = self.source.next().unwrap();
-        match expr {
-            s if s.starts_with("/*") => {
-                // read till matching end pattern
-                let _comment = self.consume_while(&mut |seq| seq.contains("*/"));
-                expr = self.source.next().unwrap().split_once("*/").unwrap().1;
+        let ch = self.source.next().unwrap();
+        match ch {
+            // /* multiline comment */
+            ch if ch == '/' && self.source.peek().unwrap() == &'*' => {
+                todo!("Read till terminating */")
             }
-            _ => todo!(),
+            // single line comment
+            ch if ch == '/' && self.source.peek().unwrap() == &'/' => {
+                todo!("Read till line end")
+            }
+            // clean whitespace
+            ch if ch.is_whitespace() => {
+                self.consume_while(&mut |ch| ch.is_whitespace());
+                self.source.next().expect("Couldn't take next char")
+            }
+            _ => ch,
         }
-        // return the
-        expr
     }
 
     fn consume_while<F>(&mut self, test: &mut F) -> String
