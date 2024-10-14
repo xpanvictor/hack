@@ -4,7 +4,7 @@
 
 use std::iter::Peekable;
 use std::path::Path;
-use std::{fs, vec};
+use std::{fs, usize, vec};
 
 pub struct Tokenizer {
     source: Box<Peekable<vec::IntoIter<char>>>,
@@ -18,6 +18,16 @@ pub enum TokenType {
     T_IDENTIFIER,
     T_INT_CONST(u32),
     T_STRING_CONST,
+}
+
+/// States for the tokenizer
+/// Using a state machine
+pub enum State {
+    Start,
+    Comment(bool), // is_multiline_comment
+    Ascii,
+    Number,
+    Symbol,
 }
 
 impl Tokenizer {
@@ -41,28 +51,58 @@ impl Tokenizer {
         self.source.peek().is_some()
     }
 
-    fn purify_calculate_next_token(&mut self) -> char {
+    pub fn which_state(&mut self) -> State {
+        let c = self.source.next().unwrap();
+
+        loop {
+            let state = match c {
+                ch if ch.is_whitespace() => State::Start,
+                '/' => {
+                    let next_c = self.source.peek();
+                    match next_c.unwrap() {
+                        '/' => State::Comment(false),
+                        '*' => State::Comment(true),
+                        _ => todo!(),
+                    }
+                }
+                ch if ch.is_ascii() => State::Ascii,
+                ch if ch.is_numeric() => State::Number,
+                _ => State::Symbol,
+            };
+
+            match state {
+                State::Start => continue,
+                _ => break state,
+            }
+        }
+    }
+
+    fn purify_calculate_next_token(&mut self) -> TokenType {
         //! Note: Handles a bunch of functionalities for token management
         //!
         //! 1. Removes comments.
         //! 2. Joins groups of certain tokens
-        // clean comment
-        let ch = self.source.next().unwrap();
-        match ch {
-            // /* multiline comment */
-            ch if ch == '/' && self.source.peek().unwrap() == &'*' => {
-                todo!("Read till terminating */")
+
+        let curr_state = self.which_state();
+        match curr_state {
+            State::Start => todo!(),
+            State::Comment(is_multiline_comment) => todo!(),
+            State::Ascii => {
+                let combined_value = self.consume_while(&mut |ch| !ch.is_whitespace());
+                Self::get_char_type(&combined_value)
             }
-            // single line comment
-            ch if ch == '/' && self.source.peek().unwrap() == &'/' => {
-                todo!("Read till line end")
+            State::Number => {
+                let calc_number = self
+                    .consume_while(&mut |ch| !ch.is_whitespace())
+                    .parse::<usize>()
+                    .expect("Invalid number");
+                TokenType::T_INT_CONST(
+                    calc_number
+                        .try_into()
+                        .expect("Size boundary for number not fit"),
+                )
             }
-            // clean whitespace
-            ch if ch.is_whitespace() => {
-                self.consume_while(&mut |ch| ch.is_whitespace());
-                self.source.next().expect("Couldn't take next char")
-            }
-            _ => ch,
+            State::Symbol => todo!(),
         }
     }
 
@@ -83,19 +123,8 @@ impl Tokenizer {
         gen_result
     }
 
-    /// # Panics
-    ///
-    /// Unregistered token types panic
-    fn get_token(raw_token: &str) -> TokenType {
-        // some match logic
-        match raw_token {
-            "class" | "constructor" => TokenType::T_KEYWORD(raw_token.to_string()),
-            // check for integer
-            s if s.trim().parse::<u32>().is_ok() => {
-                TokenType::T_INT_CONST(s.parse::<u32>().unwrap())
-            }
-            _ => panic!("Unknown token: {}", raw_token),
-        }
+    fn get_char_type(val: &str) -> TokenType {
+        todo!()
     }
 
     /// Advances by setting next token from source to curr token
@@ -108,11 +137,15 @@ impl Tokenizer {
             panic!("No more tokens!")
         }
         // A cleaner sequence
-        self.current_token = Some(Self::get_token(self.purify_calculate_next_token()));
+        self.current_token = Some(self.purify_calculate_next_token())
     }
 
-    pub fn token_type(&mut self) -> TokenType {
-        todo!()
+    pub fn token_type(&mut self) -> &TokenType {
+        if let Some(curr_token) = &self.current_token {
+            curr_token
+        } else {
+            panic!("Invalid token")
+        }
     }
 
     pub fn key_word(&self) -> &str {
