@@ -3,7 +3,6 @@ use crate::constants::{
 };
 use crate::parser::{ArgumentPair, CommandType};
 use std::path::Path;
-use std::u128;
 use std::{fs::File, io::Write, path};
 
 // OpenOptions::new()

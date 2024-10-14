@@ -2,51 +2,94 @@
 //!
 //! Token manager based on Lexicon
 
-use std::fs;
 use std::iter::Peekable;
 use std::path::Path;
-use std::vec::IntoIter;
+use std::{fs, vec};
 
-pub struct Tokenizer<'a> {
-    source: Box<Peekable<core::str::SplitAsciiWhitespace<'a>>>,
-    current_token: Option<TokenType<'a>>,
+pub struct Tokenizer {
+    source: Box<Peekable<vec::IntoIter<char>>>,
+    current_token: Option<TokenType>,
 }
 
 #[allow(non_camel_case_types)]
-pub enum TokenType<'a> {
-    T_KEYWORD(&'a str),
+pub enum TokenType {
+    T_KEYWORD(String),
     T_SYMBOL,
     T_IDENTIFIER,
-    T_INT_CONST,
+    T_INT_CONST(u32),
     T_STRING_CONST,
 }
 
-impl<'a> Tokenizer<'a> {
+impl Tokenizer {
     fn new(file_path: &Path) -> Self {
         //! The tokenizer splits by space
         Tokenizer {
             source: Box::new(
                 fs::read_to_string(file_path)
                     .expect("Couldn't read source stream")
-                    // TODO: might have to clean here
-                    .split_ascii_whitespace()
+                    .chars()
+                    .map(|x| x.to_owned())
+                    .collect::<Vec<_>>()
                     .into_iter()
-                    .peekable()
+                    .peekable(),
             ),
-            current_token: None
+            current_token: None,
         }
     }
 
-    pub fn has_more_token(&mut self) -> bool {self.source.peek().is_some()}
-
-    fn purify_next_token(&mut self) -> &str {
-        // remove comments
-        todo!("Remove comments")
+    pub fn has_more_token(&mut self) -> bool {
+        self.source.peek().is_some()
     }
 
-    fn get_token(raw_token: &str) -> TokenType<'_> {
+    fn purify_calculate_next_token(&mut self) -> &str {
+        //! Note: Handles a bunch of functionalities for token management
+        //!
+        //! 1. Removes comments.
+        //! 2. Joins groups of certain tokens
+        // clean comment
+        let mut expr = self.source.next().unwrap();
+        match expr {
+            s if s.starts_with("/*") => {
+                // read till matching end pattern
+                let _comment = self.consume_while(&mut |seq| seq.contains("*/"));
+                expr = self.source.next().unwrap().split_once("*/").unwrap().1;
+            }
+            _ => todo!(),
+        }
+        // return the
+        expr
+    }
+
+    fn consume_while<F>(&mut self, test: &mut F) -> String
+    where
+        F: FnMut(&char) -> bool,
+    {
+        let mut gen_result = String::new();
+
+        loop {
+            let temp = self.source.peek();
+            if temp.is_none() || test(temp.unwrap()) {
+                break;
+            }
+            gen_result.push(self.source.next().unwrap())
+        }
+
+        gen_result
+    }
+
+    /// # Panics
+    ///
+    /// Unregistered token types panic
+    fn get_token(raw_token: &str) -> TokenType {
         // some match logic
-        todo!("token mapping")
+        match raw_token {
+            "class" | "constructor" => TokenType::T_KEYWORD(raw_token.to_string()),
+            // check for integer
+            s if s.trim().parse::<u32>().is_ok() => {
+                TokenType::T_INT_CONST(s.parse::<u32>().unwrap())
+            }
+            _ => panic!("Unknown token: {}", raw_token),
+        }
     }
 
     /// Advances by setting next token from source to curr token
@@ -59,18 +102,30 @@ impl<'a> Tokenizer<'a> {
             panic!("No more tokens!")
         }
         // A cleaner sequence
-        self.current_token = Some(Self::get_token(self.purify_next_token()));
+        self.current_token = Some(Self::get_token(self.purify_calculate_next_token()));
     }
 
-    pub fn token_type(&mut self) -> TokenType {todo!()}
+    pub fn token_type(&mut self) -> TokenType {
+        todo!()
+    }
 
-    pub fn key_word(&self) -> &str {todo!()}
+    pub fn key_word(&self) -> &str {
+        todo!()
+    }
 
-    pub fn symbol(&self) -> char {todo!()}
+    pub fn symbol(&self) -> char {
+        todo!()
+    }
 
-    pub fn identifier(&self) -> &str {todo!()}
+    pub fn identifier(&self) -> &str {
+        todo!()
+    }
 
-    pub fn int_val(&self) -> usize {todo!()}
+    pub fn int_val(&self) -> usize {
+        todo!()
+    }
 
-    pub fn string_val(&self) -> &str {todo!()}
+    pub fn string_val(&self) -> &str {
+        todo!()
+    }
 }
