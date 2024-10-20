@@ -5,8 +5,6 @@
 use std::iter::Peekable;
 use std::path::Path;
 use std::{fs, vec};
-use std::thread::sleep;
-use std::time::Duration;
 
 pub struct Tokenizer {
     source: Box<Peekable<vec::IntoIter<char>>>,
@@ -32,6 +30,7 @@ pub enum TokenType {
 /// Using a state machine
 #[derive(Debug)]
 pub enum State {
+    /// Marks advance able
     Start,
     /// (is_multiline_comment)
     Comment(bool),
@@ -41,6 +40,8 @@ pub enum State {
     Number,
     /// shows symbol type
     Symbol,
+    /// End of reading
+    End
 }
 
 // list of words that are reserved keywords and are used in match expr
@@ -90,13 +91,16 @@ impl Tokenizer {
     }
 
     pub fn has_more_token(&mut self) -> bool {
+        self.consume_while(&mut |ch | ch.is_whitespace());
         self.source.peek().is_some()
     }
 
     pub fn which_state(&mut self) -> State {
-
         loop {
-            let mut c = self.source.peek().unwrap().to_owned();
+            if !self.has_more_token() {
+                break State::End
+            }
+            let c = self.source.peek().unwrap().to_owned();
 
             let state = match c {
                 ch if ch.is_whitespace() => State::Start,
@@ -116,8 +120,8 @@ impl Tokenizer {
             match state {
                 State::Start => {
                     self.source.next().unwrap();
-                    continue
-                },
+                    continue;
+                }
                 _ => break state,
             }
         }
@@ -125,7 +129,7 @@ impl Tokenizer {
 
     fn clean_comment(&mut self, is_multiline: bool) {
         loop {
-            let s = self.consume_while(&mut |ch| {
+            self.consume_while(&mut |ch| {
                 return if is_multiline {
                     ch != &'*'
                 } else {
@@ -134,11 +138,17 @@ impl Tokenizer {
             });
             let _ = self.source.next().unwrap_or(' ');
 
-            if !is_multiline {break}
-            let next_overhead =
-                self.source.next().expect("Requires another lookahead for last '/' of multiline comment");
+            if !is_multiline {
+                break;
+            }
+            let next_overhead = self
+                .source
+                .next()
+                .expect("Requires another lookahead for last '/' of multiline comment");
 
-            if next_overhead == '/' {break}
+            if next_overhead == '/' {
+                break;
+            }
         }
     }
 
@@ -151,6 +161,7 @@ impl Tokenizer {
         let curr_state = self.which_state();
         match curr_state {
             State::Start => self.purify_calculate_next_token(),
+            State::End => todo!(),
             State::Comment(is_multiline_comment) => {
                 self.clean_comment(is_multiline_comment);
                 // recursively try again
@@ -169,9 +180,12 @@ impl Tokenizer {
                 )
             }
             State::Symbol => {
-                let consumed_symbol = self.source.next().expect("Expects another symbol of type 'char'");
+                let consumed_symbol = self
+                    .source
+                    .next()
+                    .expect("Expects another symbol of type 'char'");
                 TokenType::T_SYMBOL(consumed_symbol)
-            },
+            }
         }
     }
 
@@ -197,7 +211,7 @@ impl Tokenizer {
 
     fn consume_char(&mut self) -> Option<char> {
         let ch = self.source.next();
-        self.consume_while(&mut|c| !c.is_whitespace());
+        self.consume_while(&mut |c| !c.is_whitespace());
         ch
     }
 
