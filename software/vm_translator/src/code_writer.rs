@@ -14,12 +14,12 @@ use std::{fs::File, io::Write, path};
 pub struct CodeWriter {
     translated_assembly_file_handle: File,
     output_file_path: path::PathBuf,
-    // shows currently parsing file
+    /// shows currently parsing file
     current_file_name: String,
-    // pointer to note depth of jump statement
-    // NOTE: Never read directly, use helper function `generate_depth`
+    /// pointer to note depth of jump statement
+    /// NOTE: Never read directly, use helper function `generate_depth`
     jump_depth: usize,
-    // a convenience to fetch currently running function
+    /// a convenience to fetch currently running function
     active_function: Option<String>,
 }
 

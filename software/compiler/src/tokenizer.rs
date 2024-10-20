@@ -5,6 +5,8 @@
 use std::iter::Peekable;
 use std::path::Path;
 use std::{fs, vec};
+use std::thread::sleep;
+use std::time::Duration;
 
 pub struct Tokenizer {
     source: Box<Peekable<vec::IntoIter<char>>>,
@@ -12,11 +14,12 @@ pub struct Tokenizer {
 }
 
 #[allow(non_camel_case_types)]
+#[derive(Debug)]
 pub enum TokenType {
     /// class, constructor, function, etc
     T_KEYWORD(String),
     /// terminals .e.g ( ) , { } < |
-    T_SYMBOL,
+    T_SYMBOL(char),
     /// sequence of letters, digits, and '_' not starting with digit
     T_IDENTIFIER(String),
     /// sequence of int digits
@@ -27,6 +30,7 @@ pub enum TokenType {
 
 /// States for the tokenizer
 /// Using a state machine
+#[derive(Debug)]
 pub enum State {
     Start,
     /// (is_multiline_comment)
@@ -41,9 +45,27 @@ pub enum State {
 
 // list of words that are reserved keywords and are used in match expr
 const KEYWORDS: &[&str] = &[
-    "class", "constructor", "function", "method", "field", "static", "var",
-    "int", "char", "boolean", "void", "true", "false", "null", "this", "let",
-    "do", "if", "else", "while", "return"
+    "class",
+    "constructor",
+    "function",
+    "method",
+    "field",
+    "static",
+    "var",
+    "int",
+    "char",
+    "boolean",
+    "void",
+    "true",
+    "false",
+    "null",
+    "this",
+    "let",
+    "do",
+    "if",
+    "else",
+    "while",
+    "return",
 ];
 
 fn is_keyword(word: &str) -> bool {
@@ -51,7 +73,7 @@ fn is_keyword(word: &str) -> bool {
 }
 
 impl Tokenizer {
-    fn new(file_path: &Path) -> Self {
+    pub fn new(file_path: &Path) -> Self {
         //! The tokenizer splits by space
         Tokenizer {
             source: Box::new(
@@ -72,9 +94,10 @@ impl Tokenizer {
     }
 
     pub fn which_state(&mut self) -> State {
-        let c = self.source.next().unwrap();
 
         loop {
+            let mut c = self.source.peek().unwrap().to_owned();
+
             let state = match c {
                 ch if ch.is_whitespace() => State::Start,
                 '/' => {
@@ -82,18 +105,40 @@ impl Tokenizer {
                     match next_c.unwrap() {
                         '/' => State::Comment(false),
                         '*' => State::Comment(true),
-                        _ => todo!(),
+                        _ => panic!("Unrecognized comment"),
                     }
                 }
-                ch if ch.is_ascii() => State::Ascii,
+                ch if ch.is_alphanumeric() => State::Ascii,
                 ch if ch.is_numeric() => State::Number,
                 _ => State::Symbol,
             };
 
             match state {
-                State::Start => continue,
+                State::Start => {
+                    self.source.next().unwrap();
+                    continue
+                },
                 _ => break state,
             }
+        }
+    }
+
+    fn clean_comment(&mut self, is_multiline: bool) {
+        loop {
+            let s = self.consume_while(&mut |ch| {
+                return if is_multiline {
+                    ch != &'*'
+                } else {
+                    ch != &'\n'
+                };
+            });
+            let _ = self.source.next().unwrap_or(' ');
+
+            if !is_multiline {break}
+            let next_overhead =
+                self.source.next().expect("Requires another lookahead for last '/' of multiline comment");
+
+            if next_overhead == '/' {break}
         }
     }
 
@@ -105,22 +150,12 @@ impl Tokenizer {
 
         let curr_state = self.which_state();
         match curr_state {
-            State::Start => todo!(),
+            State::Start => self.purify_calculate_next_token(),
             State::Comment(is_multiline_comment) => {
-                if is_multiline_comment {
-                    let _ = self.consume_while(&mut|ch| {
-                        return if ch == &'*' {
-                            let next_read_ahead =
-                                self.source.peek().expect("Comment deciphering requires next look ahead");
-                            next_read_ahead == &'/'
-                        } else {
-                            ch == &'\n'
-                        }
-                    });
-                } else {}
+                self.clean_comment(is_multiline_comment);
                 // recursively try again
                 self.purify_calculate_next_token()
-            },
+            }
             State::Ascii => self.get_char_type(),
             State::Number => {
                 let calc_number = self
@@ -133,10 +168,15 @@ impl Tokenizer {
                         .expect("Size boundary for number not fit"),
                 )
             }
-            State::Symbol => todo!(),
+            State::Symbol => {
+                let consumed_symbol = self.source.next().expect("Expects another symbol of type 'char'");
+                TokenType::T_SYMBOL(consumed_symbol)
+            },
         }
     }
 
+    /// One char lookahead convenience utility using closure
+    /// for deterministic end of read; it muts source
     fn consume_while<F>(&mut self, test: &mut F) -> String
     where
         F: FnMut(&char) -> bool,
@@ -145,34 +185,42 @@ impl Tokenizer {
 
         loop {
             let temp = self.source.peek();
-            if temp.is_none() || test(temp.unwrap()) {
+            if temp.is_none() || !test(temp.unwrap()) {
                 break;
             }
             gen_result.push(self.source.next().unwrap())
         }
+        // drain the delimeter
 
         gen_result
     }
 
+    fn consume_char(&mut self) -> Option<char> {
+        let ch = self.source.next();
+        self.consume_while(&mut|c| !c.is_whitespace());
+        ch
+    }
+
     /// Operates only on the State::Ascii form which is
-    /// Identifier | String_const
     fn get_char_type(&mut self) -> TokenType {
         let ch = self.source.peek().unwrap();
         match ch {
             ch if ch == &'"' => {
+                self.consume_char();
                 let str_const = self.consume_while(&mut |c| *c != '"');
-                // don't last '"' TODO: but advance
+                // don't last '"' but advance
+                self.consume_char();
                 TokenType::T_STRING_CONST(str_const)
             }
             _ => {
-                let consumed_word = self.consume_while(&mut |ch| !ch.is_whitespace());
+                let consumed_word = self.consume_while(&mut |ch| ch.is_alphanumeric());
                 // check if is keyword, else return identifier
                 if is_keyword(&consumed_word) {
                     TokenType::T_KEYWORD(consumed_word)
                 } else {
                     TokenType::T_IDENTIFIER(consumed_word)
                 }
-            },
+            }
         }
     }
 

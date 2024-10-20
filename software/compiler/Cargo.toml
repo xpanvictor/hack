@@ -6,3 +6,4 @@ description = "LL1 compiler for the hack computer."
 repository = "https://github.com/xpanvictor/hack/tree/master/software/compiler"
 
 [dependencies]
+glob = { version = "0.3.1" }
