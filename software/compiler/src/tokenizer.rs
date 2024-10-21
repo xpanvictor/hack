@@ -105,6 +105,7 @@ impl Tokenizer {
             let state = match c {
                 ch if ch.is_whitespace() => State::Start,
                 '/' => {
+                    let _ = self.source.next();
                     let next_c = self.source.peek();
                     match next_c.unwrap() {
                         '/' => State::Comment(false),
@@ -129,23 +130,26 @@ impl Tokenizer {
 
     fn clean_comment(&mut self, is_multiline: bool) {
         loop {
-            self.consume_while(&mut |ch| {
+            let cap = self.consume_while(&mut |ch| {
                 return if is_multiline {
                     ch != &'*'
                 } else {
                     ch != &'\n'
                 };
             });
-            let _ = self.source.next().unwrap_or(' ');
+            let c = self.source.next().unwrap_or(' ');
 
+            println!("{cap} comp1 {c} {is_multiline}");
             if !is_multiline {
                 break;
             }
+            println!("comp {c}");
             let next_overhead = self
                 .source
                 .next()
                 .expect("Requires another lookahead for last '/' of multiline comment");
 
+            println!("comp {next_overhead}");
             if next_overhead == '/' {
                 break;
             }
