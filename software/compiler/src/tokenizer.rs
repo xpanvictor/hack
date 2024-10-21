@@ -40,6 +40,7 @@ pub enum State {
     Number,
     /// shows symbol type
     Symbol,
+    CapturedSymbol(char),
     /// End of reading
     End
 }
@@ -110,7 +111,8 @@ impl Tokenizer {
                     match next_c.unwrap() {
                         '/' => State::Comment(false),
                         '*' => State::Comment(true),
-                        _ => panic!("Unrecognized comment"),
+                        wt if wt.is_whitespace() => State::CapturedSymbol(c),
+                        _ => panic!("Unrecognized comment: {}", next_c.unwrap()),
                     }
                 }
                 ch if ch.is_numeric() => State::Number,
@@ -162,7 +164,7 @@ impl Tokenizer {
         let curr_state = self.which_state();
         match curr_state {
             State::Start => self.purify_calculate_next_token(),
-            State::End => todo!(),
+            State::End => panic!("Should've checked if has tokens!"),
             State::Comment(is_multiline_comment) => {
                 self.clean_comment(is_multiline_comment);
                 // recursively try again
@@ -180,6 +182,7 @@ impl Tokenizer {
                         .expect("Size boundary for number not fit"),
                 )
             }
+            State::CapturedSymbol(char) => TokenType::T_SYMBOL(char),
             State::Symbol => {
                 let consumed_symbol = self
                     .source

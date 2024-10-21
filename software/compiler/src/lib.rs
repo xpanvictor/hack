@@ -6,9 +6,11 @@ use crate::tokenizer::{TokenType, Tokenizer};
 use glob::glob;
 use std::path::Path;
 use xml_writer::XMLWriter;
+use crate::utils::get_file_name;
 
 mod tokenizer;
 mod xml_writer;
+mod utils;
 
 fn analyze_tokenizer(tokenizer: &mut Tokenizer, xml_writer: &mut XMLWriter) {
     while tokenizer.has_more_token() {
@@ -40,7 +42,7 @@ pub fn analyzer(mut args: impl Iterator<Item = String>) {
         for entry in glob(file_pattern.to_str().unwrap()).unwrap() {
             match entry {
                 Ok(file_path) => {
-                    let output_file_name = format!("{}T", file_path.file_stem().unwrap().to_str().unwrap());
+                    let output_file_name = format!("{}T", get_file_name(&file_path));
                     let output_file_path = Path::new(&output_file_name)
                         .with_extension("xml");
 
@@ -52,7 +54,7 @@ pub fn analyzer(mut args: impl Iterator<Item = String>) {
             }
         }
     } else {
-        let output_file_name = format!("{}T", filepath.file_stem().unwrap().to_str().unwrap());
+        let output_file_name = format!("{}T", get_file_name(&filepath));
         let output_file_path = Path::new(&output_file_name)
             .with_extension("xml");
         println!("{:?}", output_file_path);
