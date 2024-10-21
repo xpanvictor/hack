@@ -113,8 +113,8 @@ impl Tokenizer {
                         _ => panic!("Unrecognized comment"),
                     }
                 }
-                ch if ch.is_alphanumeric() => State::Ascii,
                 ch if ch.is_numeric() => State::Number,
+                ch if ch.is_alphanumeric() => State::Ascii,
                 _ => State::Symbol,
             };
 
@@ -130,26 +130,23 @@ impl Tokenizer {
 
     fn clean_comment(&mut self, is_multiline: bool) {
         loop {
-            let cap = self.consume_while(&mut |ch| {
+            let _ = self.consume_while(&mut |ch| {
                 return if is_multiline {
                     ch != &'*'
                 } else {
                     ch != &'\n'
                 };
             });
-            let c = self.source.next().unwrap_or(' ');
+            let _ = self.source.next().unwrap_or(' ');
 
-            println!("{cap} comp1 {c} {is_multiline}");
             if !is_multiline {
                 break;
             }
-            println!("comp {c}");
             let next_overhead = self
                 .source
                 .next()
                 .expect("Requires another lookahead for last '/' of multiline comment");
 
-            println!("comp {next_overhead}");
             if next_overhead == '/' {
                 break;
             }
@@ -174,7 +171,7 @@ impl Tokenizer {
             State::Ascii => self.get_char_type(),
             State::Number => {
                 let calc_number = self
-                    .consume_while(&mut |ch| !ch.is_whitespace())
+                    .consume_while(&mut |ch| ch.is_numeric())
                     .parse::<usize>()
                     .expect("Invalid number");
                 TokenType::T_INT_CONST(

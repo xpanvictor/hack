@@ -21,7 +21,7 @@ fn analyze_tokenizer(tokenizer: &mut Tokenizer, xml_writer: &mut XMLWriter) {
             TokenType::T_STRING_CONST(tt) =>
                 xml_writer.write_token("stringConstant", tt),
             TokenType::T_INT_CONST(tt) =>
-                xml_writer.write_token("intConstant", format!("{tt}").as_str()),
+                xml_writer.write_token("integerConstant", format!("{tt}").as_str()),
             TokenType::T_SYMBOL(tt) =>
                 xml_writer.write_token("symbol", format!("{tt}").as_str()),
         }
@@ -33,13 +33,15 @@ pub fn analyzer(mut args: impl Iterator<Item = String>) {
 
     let filepath = args.next().expect("Filepath is required!");
     let filepath = Path::new(&filepath);
+    println!("{}", filepath.display());
 
     if filepath.is_dir() {
         let file_pattern = filepath.join("**").join("*.jack");
         for entry in glob(file_pattern.to_str().unwrap()).unwrap() {
             match entry {
                 Ok(file_path) => {
-                    let output_file_path = file_path
+                    let output_file_name = format!("{}T", file_path.file_stem().unwrap().to_str().unwrap());
+                    let output_file_path = Path::new(&output_file_name)
                         .with_extension("xml");
 
                     let mut tokenizer = Tokenizer::new(&file_path);
@@ -50,8 +52,10 @@ pub fn analyzer(mut args: impl Iterator<Item = String>) {
             }
         }
     } else {
-        let output_file_path = filepath
+        let output_file_name = format!("{}T", filepath.file_stem().unwrap().to_str().unwrap());
+        let output_file_path = Path::new(&output_file_name)
             .with_extension("xml");
+        println!("{:?}", output_file_path);
 
         let mut tokenizer = Tokenizer::new(filepath);
         let mut xml_writer = XMLWriter::new(output_file_path.as_path());
