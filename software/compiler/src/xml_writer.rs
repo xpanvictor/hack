@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+use crate::tokenizer::TokenType;
 
 pub struct XMLWriter {
     pub output_file: File,
@@ -19,9 +20,19 @@ impl XMLWriter {
         xml_writer
     }
 
-    pub fn write_token(&mut self, token_name: &str, token_value: &str) {
+    pub fn write_token_xml(&mut self, token_name: &str, token_value: &str) {
         let token_line = format!("<{token_name}> {token_value} </{token_name}> \n");
         self.output_file.write_all(token_line.as_bytes()).unwrap()
+    }
+
+    pub fn write_token(&mut self, token: &str) {
+        self.output_file.write_all(token.as_bytes()).unwrap()
+    }
+
+    pub fn write_formatted_token(&mut self, token: &TokenType) {
+        let token_name = todo!();
+        let token_value = token.get_token_content_as_string();
+        self.write_token_xml(token_name, token_value.as_str());
     }
 }
 

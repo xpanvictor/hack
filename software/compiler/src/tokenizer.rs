@@ -12,7 +12,7 @@ pub struct Tokenizer {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum TokenType {
     /// class, constructor, function, etc
     T_KEYWORD(String),
@@ -25,6 +25,24 @@ pub enum TokenType {
     /// sequence of chars, not including double quotes or \n
     T_STRING_CONST(String),
 }
+
+impl TokenType {
+    pub fn get_token_content_as_string(&self) -> String {
+        match self {
+            TokenType::T_KEYWORD(keyword) => keyword.to_string(),
+            TokenType::T_SYMBOL(symbol) => symbol.to_string(),
+            TokenType::T_IDENTIFIER(identifier) => identifier.to_string(),
+            TokenType::T_INT_CONST(int_const) => int_const.to_string(),
+            TokenType::T_STRING_CONST(str_const) => str_const.to_string(),
+        }
+    }
+}
+// impl PartialEq for TokenType {
+//     fn eq(&self, other: &Self) -> bool {
+//         match self {
+//         }
+//     }
+// }
 
 /// States for the tokenizer
 /// Using a state machine
